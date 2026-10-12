@@ -1,5 +1,6 @@
 #include <random>
 #include "GameEngine.h"
+#include "MathUtil.h"
 #include "Player.h"
 #include "Enemy.h"
 #include "Stars.h"
@@ -19,6 +20,15 @@ public:
         mLoc.y = yRand(gen);
         mSpeed.x = speed(gen); // Random speed between 1 and 5
         mSpeed.y = speed(gen); // Random speed between 1 and 5
+    }
+
+    float GetRotation() const override {
+        return 0;
+    }
+
+    CMPUT350::Point2D GetLocation() const override {
+        return CMPUT350::Point2D(0,0);
+
     }
 
     void Update(CMPUT350::GameContext* context) override
@@ -115,7 +125,7 @@ std::mt19937 Ball::gen(rd());
 int main()
 {
     // The ball sample is the engine's own test, so the galaga scene is what runs by default
-    bool runBallSample = false;
+    bool runBallSample = true;
 
     if (runBallSample)
     {

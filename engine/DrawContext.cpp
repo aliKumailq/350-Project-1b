@@ -28,8 +28,9 @@ inline sf::Text DrawContext::GetSfText(const std::string& text, int pixelSize, P
     return my_text;
 }
 
-void DrawContext::DrawCenteredText(const std::string& text, int pixelSize, RGBColor c) {
-    auto my_text = GetSfText(text, pixelSize, mOffset, c);
+void DrawContext::DrawCenteredText(const std::string& text, int pixelSize,Point2D p ,RGBColor c) {
+    p += mOffset;
+    auto my_text = GetSfText(text, pixelSize, p, c);
     auto text_bounding_box = my_text.getLocalBounds();
 
     my_text.setOrigin(text_bounding_box.position + (text_bounding_box.size / 2.0f));
@@ -42,15 +43,15 @@ void DrawContext::DrawCenteredText(const std::string& text, int pixelSize, RGBCo
     mWindow->draw(my_text);
 }
 
-void DrawContext::DrawText(const std::string& text, int pixelSize, RGBColor c) {
-    mWindow->draw(GetSfText(text, pixelSize, mOffset, c));
+void DrawContext::DrawText(const std::string& text, int pixelSize, Point2D p, RGBColor c) {
+    mWindow->draw(GetSfText(text, pixelSize, p + mOffset, c));
 }
 
-void DrawContext::DrawCircle(float radius, RGBColor c) {
+void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
     sf::CircleShape circle(
         radius);  // FIXME: Should probably throw some exception if the radius is 0.
 
-    const auto& p = mOffset;
+    p += mOffset;
 
     circle.setPosition(sf::Vector2f(p.x, p.y));
     circle.setFillColor(sf::Color(c.r, c.g, c.b));
@@ -113,7 +114,7 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
     line.setPoint(3, GetSfVec(end * -1));
 
     line.setFillColor(GetSfColor(c));
-    line.setPosition(GetSfVec(mOffset));
+    line.setPosition(GetSfVec(mOffset + from));
 
     mWindow->draw(line);
 }
