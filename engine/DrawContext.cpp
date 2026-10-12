@@ -1,5 +1,6 @@
 #include "DrawContext.h"
 #include <SFML/Graphics.hpp>
+#include <cmath>
 
 
 static inline sf::Vector2f GetSfVec(const CMPUT350::Point2D& pnt) {
@@ -15,7 +16,7 @@ namespace CMPUT350 {
 
 
 DrawContext::DrawContext(std::shared_ptr<sf::RenderWindow> window, std::shared_ptr<sf::Font> font)
-    : mWindow(window), mFont(font) {}
+    : mWindow(window), mFont(font), mOffset(Point2D(0,0)), mRotation(0), mRotation_cos(1), mRotation_sin(0) {}
 
 
 inline sf::Text DrawContext::GetSfText(const std::string &text, int pixelSize, Point2D p,RGBColor c) {
@@ -27,10 +28,10 @@ inline sf::Text DrawContext::GetSfText(const std::string &text, int pixelSize, P
 
 }
 
-void DrawContext::DrawCenteredText(const std::string &text, int pixelSize, Point2D p, RGBColor c) {
+void DrawContext::DrawCenteredText(const std::string &text, int pixelSize, RGBColor c) {
 
 
-    auto my_text = GetSfText(text, pixelSize, p, c);
+    auto my_text = GetSfText(text, pixelSize, mOffset, c);
     auto text_bounding_box = my_text.getLocalBounds();
 
     my_text.setOrigin(text_bounding_box.position + (text_bounding_box.size / 2.0f));
@@ -46,15 +47,17 @@ void DrawContext::DrawCenteredText(const std::string &text, int pixelSize, Point
 
 }
 
-void DrawContext::DrawText(const std::string &text, int pixelSize, Point2D p, RGBColor c) {
+void DrawContext::DrawText(const std::string &text, int pixelSize,  RGBColor c) {
 
-     mWindow->draw(GetSfText(text, pixelSize, p, c));
+     mWindow->draw(GetSfText(text, pixelSize, mOffset, c));
 
 }
 
-void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
+void DrawContext::DrawCircle(float radius, RGBColor c) {
 
     sf::CircleShape circle(radius); // FIXME: Should probably throw some exception if the radius is 0.
+
+    const auto& p = mOffset;
 
     circle.setPosition(sf::Vector2f(p.x, p.y));
     circle.setFillColor(sf::Color(c.r,c.g,c.b));
@@ -120,7 +123,7 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
     line.setPoint(3, GetSfVec(end * -1));
 
     line.setFillColor(GetSfColor(c));
-    line.setPosition(GetSfVec(from));
+    line.setPosition(GetSfVec(mOffset));
 
     mWindow->draw(line);
 
@@ -138,5 +141,49 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
 int DrawContext::GetWindowWidth() { return mWindow->getSize().x; }
 
 int DrawContext::GetWindowHeight() { return mWindow->getSize().y; }
+
+
+void DrawContext::SetContextOffset(const Point2D& p) {
+    mOffset = p;
+}
+
+
+
+
+	void DrawContext::SetContextRotation(float rotation) {
+        mRotation = rotation;
+        mRotation_cos = cosf(rotation);
+        mRotation_sin = sinf(rotation);
+        return;
+    }
+
+    static inline Point2D TransformPoint(const Point2D& p, const float& cos, const float& sin, const bool reverse = false) {
+        // rotates p relative to its origin
+
+        const float x = reverse ? (p.x * cos +  p.y * sin) : (p.x * cos -  p.y * sin);
+        const float y = reverse ? (p.y * cos - p.x * sin) : (p.x * sin + p.y * cos);
+        return Point2D(x,y);
+        
+    }
+
+
+
+	Point2D DrawContext::Transform(const Point2D& point) {
+        return TransformPoint(point, mRotation_cos, mRotation_sin) += mOffset;
+    }
+
+	Point2D DrawContext::ReverseTransform(const Point2D& point){
+        return TransformPoint(point - mOffset, mRotation_cos, mRotation_sin, true);
+    }
+	Rect DrawContext::Transform(Rect r) {
+        // changes the location of r.topLeft with respect to the center after a rotation.
+        
+        const float center_x = r.topLeft.x + (r.width / 2);
+        const float center_y = r.topLeft.y - (r.height / 2);
+        const Point2D rectangle_center(center_x, center_y);
+        r.topLeft = TransformPoint(r.topLeft - rectangle_center, mRotation_cos, mRotation_sin) + rectangle_center;
+        return r;
+
+    }
 
 }  // namespace CMPUT350

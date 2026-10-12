@@ -31,9 +31,9 @@ const RGBColor grey(200, 200, 200);
 class DrawContext {
 public:
     DrawContext(std::shared_ptr<sf::RenderWindow> mWindow, std::shared_ptr<sf::Font> font);
-    void DrawText(const std::string &text, int pixelSize, Point2D p, RGBColor c);
-    void DrawCenteredText(const std::string &text, int pixelSize, Point2D p, RGBColor c);
-    void DrawCircle(Point2D p, float radius, RGBColor c);
+    void DrawText(const std::string &text, int pixelSize, RGBColor c);
+    void DrawCenteredText(const std::string &text, int pixelSize, RGBColor c);
+    void DrawCircle(float radius, RGBColor c);
     void DrawRect(Rect r, RGBColor c);
     void FrameRect(Rect r, float width, RGBColor c);
     void DrawLine(Point2D from, Point2D to, float width, RGBColor c);
@@ -41,9 +41,20 @@ public:
     int GetWindowHeight();
 
 private:
-
     inline sf::Text GetSfText(const std::string &text, int pixelSize, Point2D p, RGBColor c);
 
+    friend class GameEngine;
+    void SetContextOffset(const Point2D& p);
+	void SetContextRotation(float rotation);
+	Point2D Transform(const Point2D& p);
+	Point2D ReverseTransform(const Point2D& p);
+	Rect Transform(Rect r); // Rotates rectangle and computes new bounding box after
+
+
+    Point2D mOffset; // context offset
+    float mRotation;
+    float mRotation_cos;
+    float mRotation_sin;
 
     std::shared_ptr<sf::RenderWindow> mWindow;
     std::shared_ptr<sf::Font> mFont;
