@@ -6,7 +6,7 @@ static constexpr float kMoveStep = 20.0f;    // pixels moved by a single A or D 
 static constexpr float kBulletSpeed = 12.0f; // pixels the bullet climbs each frame
 
 Player::Player(CMPUT350::Point2D loc)
-    : mLocation(loc)
+    : mLocation(loc), mShapes{CMPUT350::Rect(mLocation - CMPUT350::Point2D(kHalfSize, kHalfSize), 2 * kHalfSize, 2 * kHalfSize)}
 {
 }
 
@@ -117,8 +117,8 @@ bool Player::IsAlive() const
 const CMPUT350::Rect& Player::GetBounds()
 {
     // The player moves, so the box is rebuilt from the current centre every time it is asked for
-    mBounds = CMPUT350::Rect(mLocation - CMPUT350::Point2D(kHalfSize, kHalfSize), 2 * kHalfSize, 2 * kHalfSize);
-    return mBounds;
+    mShapes[0] = CMPUT350::Rect(mLocation - CMPUT350::Point2D(kHalfSize, kHalfSize), 2 * kHalfSize, 2 * kHalfSize);
+    return mShapes[0].shape.rect;
 }
 
 
@@ -128,4 +128,9 @@ CMPUT350::Point2D Player::GetLocation() const {
 
 float Player::GetRotation() const {
     return 0;
+}
+
+
+const std::vector<CMPUT350::Shape> &Player::GetShapes() const {
+    return mShapes;
 }

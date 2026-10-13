@@ -27,10 +27,12 @@ public:
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;
     const CMPUT350::Rect& GetBounds() override;
+    const std::vector<CMPUT350::Shape> &GetShapes() const override;
 
 private:
     bool mAlive;
     CMPUT350::Rect mBounds; // enemies never move, so this is set once and reused for both collisions and drawing
+    std::vector<CMPUT350::Shape> mShapes;
 };
 
 

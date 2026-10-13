@@ -2,10 +2,9 @@
 #include "Bullet.h"
 
 Enemy::Enemy(CMPUT350::Point2D loc)
-    : mAlive(true)
+    : mAlive(true), mShapes{CMPUT350::Rect(loc - CMPUT350::Point2D(20.0f, 20.0f), 40.0f, 40.0f)}
 {
-    // Make a 40×40 rectangle whose center is at the given loc
-    mBounds = CMPUT350::Rect(loc - CMPUT350::Point2D(20.0f, 20.0f), 40.0f, 40.0f);
+
 }
 
 void Enemy::Initialize(CMPUT350::GameContext* context)
@@ -54,13 +53,18 @@ bool Enemy::IsAlive() const
 
 const CMPUT350::Rect& Enemy::GetBounds()
 {
-    return mBounds; // the enemy never moves, so its box is fixed from construction
+    return mShapes[0].shape.rect; // the enemy never moves, so its box is fixed from construction
 }
 
 CMPUT350::Point2D Enemy::GetLocation() const {
-    return mBounds.topLeft;
+    return mShapes[0].shape.rect.topLeft;
 }
 
 float Enemy::GetRotation() const {
     return 0;
+}
+
+
+const std::vector<CMPUT350::Shape> &Enemy::GetShapes() const {
+    return mShapes;
 }

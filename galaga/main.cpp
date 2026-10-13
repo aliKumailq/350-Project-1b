@@ -9,7 +9,7 @@ class Ball : public CMPUT350::CollisionObject
 {
 public:
     Ball(int radius) : CollisionObject(), mRadius(radius), mNumCollisions(0), mLoc(radius, radius), mSpeed(3, 3),
-                       mSpeedNext(3, 3), mFrameCollisions(0)
+                       mSpeedNext(3, 3), mFrameCollisions(0), mShapes{CMPUT350::Rect(mLoc - mRadius, 2 * mRadius, 2 * mRadius)}
     {
         std::uniform_int_distribution<int> xRand(mRadius, 1024 - mRadius);
         std::uniform_int_distribution<int> yRand(mRadius, 768 - mRadius);
@@ -90,8 +90,8 @@ public:
     const CMPUT350::Rect& GetBounds() override
     {
         // A static here would be shared by every Ball, so each ball keeps its own box
-        mBounds = CMPUT350::Rect(mLoc - mRadius, 2 * mRadius, 2 * mRadius);
-        return mBounds;
+        mShapes[0] = CMPUT350::Rect(mLoc - mRadius, 2 * mRadius, 2 * mRadius);
+        return mShapes[0].shape.rect;
     }
 
     bool IsAlive() const override
@@ -107,6 +107,10 @@ public:
         context->ScreenContext->DrawLine(mLoc, mLoc + mCollisionPoint, mRadius * 0.1f, CMPUT350::Colors::blue);
     }
 
+    const std::vector<CMPUT350::Shape> &GetShapes() const override {
+    return mShapes;
+}
+
 private:
     static std::random_device rd;
     static std::mt19937 gen;
@@ -114,6 +118,7 @@ private:
     int mRadius, mNumCollisions, mFrameCollisions;
     CMPUT350::Point2D mLoc, mSpeed, mSpeedNext, mCollisionPoint;
     CMPUT350::Rect mBounds;
+    std::vector<CMPUT350::Shape> mShapes;
 };
 
 // Shared randoms across all balls
@@ -125,7 +130,7 @@ std::mt19937 Ball::gen(rd());
 int main()
 {
     // The ball sample is the engine's own test, so the galaga scene is what runs by default
-    bool runBallSample = true;
+    bool runBallSample = false;
 
     if (runBallSample)
     {

@@ -3,7 +3,7 @@
 #include "MathUtil.h"
 
 Bullet::Bullet(CMPUT350::Point2D location, CMPUT350::Point2D heading, bool player)
-    : mLocation(location), mPreviousLocation(location), mHeading(heading), mPlayer(player), mAlive(true)
+    : mLocation(location), mPreviousLocation(location), mHeading(heading), mPlayer(player), mAlive(true), mShapes{CMPUT350::Rect(mPreviousLocation, mLocation)}
 {
 }
 
@@ -65,8 +65,8 @@ bool Bullet::IsAlive() const
 const CMPUT350::Rect& Bullet::GetBounds()
 {
     // Box around last frame's position and this one, so a fast bullet still hits what it passed through
-    mBounds = CMPUT350::Rect(mPreviousLocation, mLocation);
-    return mBounds;
+    mShapes[0] = CMPUT350::Rect(mPreviousLocation, mLocation);
+    return mShapes[0].shape.rect;
 }
 
 CMPUT350::Point2D Bullet::GetLocation() const {
@@ -75,4 +75,8 @@ CMPUT350::Point2D Bullet::GetLocation() const {
 
 float Bullet::GetRotation() const {
     return 0;
+}
+
+const std::vector<CMPUT350::Shape> &Bullet::GetShapes() const {
+    return mShapes;
 }

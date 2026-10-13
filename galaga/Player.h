@@ -27,6 +27,7 @@ public:
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;
     const CMPUT350::Rect& GetBounds() override;
+    const std::vector<CMPUT350::Shape> &GetShapes() const override;
 
 private:
     void Fire(CMPUT350::GameContext* context);
@@ -35,6 +36,7 @@ private:
     CMPUT350::Point2D mLocation;         // the player's centre
     std::weak_ptr<Bullet> mBullets[2];   // the player watches the two shots the engine owns; an empty slot is a free one
     CMPUT350::Rect mBounds;              // GetBounds returns a reference, so something has to own the rectangle
+    std::vector<CMPUT350::Shape> mShapes;
 };
 
 #endif

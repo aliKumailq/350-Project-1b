@@ -12,8 +12,13 @@ namespace CMPUT350 {
 struct Point2D {
     float x, y;
     Point2D(float x = 0, float y = 0) : x(x), y(y) {}
+
+    inline double DistanceSquared(const Point2D& other) const {
+        return SquareFloat(x - other.x) + SquareFloat(y - other.y);
+    }
+
     double Distance(const Point2D& other) const {
-        return sqrt(SquareFloat(x - other.x) + SquareFloat(y - other.y));
+        return sqrt(DistanceSquared(other));
     }
     Point2D operator+(const Point2D& other) const { return Point2D(x + other.x, y + other.y); }
     Point2D operator+(const float& other) const { return Point2D(x + other, y + other); }
