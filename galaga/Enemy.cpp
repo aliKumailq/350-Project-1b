@@ -56,3 +56,11 @@ const CMPUT350::Rect& Enemy::GetBounds()
 {
     return mBounds; // the enemy never moves, so its box is fixed from construction
 }
+
+CMPUT350::Point2D Enemy::GetLocation() const {
+    return mBounds.topLeft;
+}
+
+float Enemy::GetRotation() const {
+    return 0;
+}

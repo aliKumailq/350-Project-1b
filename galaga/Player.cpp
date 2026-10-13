@@ -120,3 +120,12 @@ const CMPUT350::Rect& Player::GetBounds()
     mBounds = CMPUT350::Rect(mLocation - CMPUT350::Point2D(kHalfSize, kHalfSize), 2 * kHalfSize, 2 * kHalfSize);
     return mBounds;
 }
+
+
+CMPUT350::Point2D Player::GetLocation() const {
+    return mLocation;
+}
+
+float Player::GetRotation() const {
+    return 0;
+}

@@ -20,6 +20,8 @@ public:
     // Graphics Object Functions
     void RenderBackground(CMPUT350::GameContext* context) override;
     void RenderForeground(CMPUT350::GameContext* context) override;
+    float GetRotation() const override;
+    CMPUT350::Point2D GetLocation() const override;
 
 
     // Collision Object Functions
