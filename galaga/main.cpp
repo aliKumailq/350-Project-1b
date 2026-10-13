@@ -125,7 +125,7 @@ std::mt19937 Ball::gen(rd());
 int main()
 {
     // The ball sample is the engine's own test, so the galaga scene is what runs by default
-    bool runBallSample = true;
+    bool runBallSample = false;
 
     if (runBallSample)
     {
