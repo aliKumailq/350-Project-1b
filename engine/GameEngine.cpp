@@ -154,6 +154,8 @@ void GameEngine::Run() {
         // 6. Render background
         for (auto& obj : mGameObjects) {
             if (std::shared_ptr<CMPUT350::GraphicsObject> ptr = std::dynamic_pointer_cast<GraphicsObject>(obj)) {
+                drawCtx.SetContextOffset(ptr->GetLocation());
+                drawCtx.SetContextRotation(ptr->GetRotation());
                 ptr->RenderBackground(&ctx); }
                 // this is bad for performance but the spec said it's fine.
         }
@@ -161,6 +163,8 @@ void GameEngine::Run() {
         // 7. Render foreground
         for (auto& obj : mGameObjects) {
             if (std::shared_ptr<CMPUT350::GraphicsObject> ptr = std::dynamic_pointer_cast<GraphicsObject>(obj)) {
+                drawCtx.SetContextOffset(ptr->GetLocation());
+                drawCtx.SetContextRotation(ptr->GetRotation());
                 ptr->RenderForeground(&ctx); }
                 // this is bad for performance but the spec said it's fine.
         }

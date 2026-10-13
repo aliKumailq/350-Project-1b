@@ -3,6 +3,7 @@
 
 #include "CollisionObject.h"
 #include "GameContext.h"
+#include "MathUtil.h"
 
 class Bullet : public CMPUT350::CollisionObject
 {
@@ -21,6 +22,9 @@ public:
     // Graphics Object Functions
     void RenderBackground(CMPUT350::GameContext* context) override;
     void RenderForeground(CMPUT350::GameContext* context) override;
+	float GetRotation() const override;
+    CMPUT350::Point2D GetLocation() const override;
+
 
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;

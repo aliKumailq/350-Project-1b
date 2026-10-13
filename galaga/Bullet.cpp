@@ -1,5 +1,6 @@
 #include "Bullet.h"
 #include "Enemy.h"
+#include "MathUtil.h"
 
 Bullet::Bullet(CMPUT350::Point2D location, CMPUT350::Point2D heading, bool player)
     : mLocation(location), mPreviousLocation(location), mHeading(heading), mPlayer(player), mAlive(true)
@@ -66,4 +67,12 @@ const CMPUT350::Rect& Bullet::GetBounds()
     // Box around last frame's position and this one, so a fast bullet still hits what it passed through
     mBounds = CMPUT350::Rect(mPreviousLocation, mLocation);
     return mBounds;
+}
+
+CMPUT350::Point2D Bullet::GetLocation() const {
+    return mLocation;
+}
+
+float Bullet::GetRotation() const {
+    return 0;
 }
