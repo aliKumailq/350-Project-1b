@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "MathUtil.h"
 
 // The player's body is 40x40 by default, so half of it is 20
 static constexpr float kHalfSize = 20.0f;
@@ -123,7 +124,7 @@ const CMPUT350::Rect& Player::GetBounds()
 
 
 CMPUT350::Point2D Player::GetLocation() const {
-    return mLocation;
+    return CMPUT350::Point2D(0,0);
 }
 
 float Player::GetRotation() const {

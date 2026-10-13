@@ -230,15 +230,18 @@ bool rect_collides(const CMPUT350::Rect& rect, const CMPUT350::CollisionObject& 
 
 
 inline bool collision(const CMPUT350::CollisionObject& obj1, const CMPUT350::CollisionObject& obj2, CMPUT350::Point2D& pnt) {
+
+    if (!(Overlaps(obj1.GetBounds(), obj2.GetBounds()))) return false;
+
     for (const auto& obj1_shape : obj1.GetShapes()) {
         
         switch(obj1_shape.t) {
             case CMPUT350::ShapeType::kLine: {
-                if(line_collides(obj1_shape.shape.line, obj2, pnt)) return true;;
+                if(line_collides(obj1_shape.shape.line, obj2, pnt)) return true;
             } break;
 
             case CMPUT350::ShapeType::kCircle: {
-                if (circle_collides(obj1_shape.shape.circle, obj2, pnt)) return true;;
+                if (circle_collides(obj1_shape.shape.circle, obj2, pnt)) return true;
             } break;
 
             case CMPUT350::ShapeType::kRect: {

@@ -62,15 +62,14 @@ bool Bullet::IsAlive() const
     return mAlive;
 }
 
-const CMPUT350::Rect& Bullet::GetBounds()
-{
+const CMPUT350::Rect& Bullet::GetBounds(){
     // Box around last frame's position and this one, so a fast bullet still hits what it passed through
     mShapes[0] = CMPUT350::Rect(mPreviousLocation, mLocation);
     return mShapes[0].shape.rect;
 }
 
 CMPUT350::Point2D Bullet::GetLocation() const {
-    return mLocation;
+    return CMPUT350::Point2D(0,0);
 }
 
 float Bullet::GetRotation() const {

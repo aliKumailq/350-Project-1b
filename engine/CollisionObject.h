@@ -33,7 +33,7 @@ public:
     virtual void CollisionEnter(const std::shared_ptr<CollisionObject> &obj) = 0;
     virtual void CollisionEnter(const std::shared_ptr<CollisionObject> &obj, const Point2D &collisionPoint)
 	{ CollisionEnter(obj); }
-    virtual const Rect &GetBounds() = 0;
+    virtual const Rect &GetBounds() const = 0;
     // Return the internal shapes in the object. Shapes can be:
     // lines, points/circles, or axis-aligned rectangles
     virtual const std::vector<Shape> &GetShapes() const  = 0;

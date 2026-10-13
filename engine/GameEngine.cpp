@@ -3,6 +3,7 @@
 #include "DrawContext.h"
 #include "GraphicsObject.h"
 #include "CollisionObject.h"
+#include "CollisionDetection.h"
 
 /// @brief
 namespace CMPUT350 {
@@ -54,6 +55,7 @@ inline void GameEngine::ProcessCollisions() {
 
     // build a list containing only objects that are capable of collisions, so we have just the objects capable of collisions before we start comparing anything
     std::vector<std::shared_ptr<CollisionObject>> colliders;
+    colliders.reserve(mGameObjects.size());
     for (auto& obj : mGameObjects) {
         // Try to treat this GameObject as a CollisionObject. If it really is one, col_ptr is valid and we keep it, if it isn't, the cast gives nullptr and we ignore it.
         if (std::shared_ptr<CMPUT350::CollisionObject> col_ptr = std::dynamic_pointer_cast<CollisionObject>(obj)) {
@@ -76,10 +78,11 @@ inline void GameEngine::ProcessCollisions() {
         //   - don't check the same pair twice
         for (size_t j = i + 1; j < colliders.size(); j++) {
             // Being CollisionObjects only means they CAN collide. Overlaps answers if their bounding boxes actually touching or overlapping
-            if (Overlaps(colliders[i]->GetBounds(), colliders[j]->GetBounds())) {
+            CMPUT350::Point2D pnt;
+            if (collision(*colliders[i], *colliders[j], pnt)) {
                 // If they are overlapping, tell BOTH objects about the same collision; The pair itself is checked only once, but each participant gets its own notification.
-                colliders[i]->CollisionEnter(colliders[j]);
-                colliders[j]->CollisionEnter(colliders[i]);
+                colliders[i]->CollisionEnter(colliders[j], pnt);
+                colliders[j]->CollisionEnter(colliders[i],pnt);
             }
         }
     }

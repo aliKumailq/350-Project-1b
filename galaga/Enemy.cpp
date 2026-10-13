@@ -57,7 +57,7 @@ const CMPUT350::Rect& Enemy::GetBounds()
 }
 
 CMPUT350::Point2D Enemy::GetLocation() const {
-    return mShapes[0].shape.rect.topLeft;
+    return CMPUT350::Point2D(0,0);
 }
 
 float Enemy::GetRotation() const {
