@@ -1,17 +1,9 @@
 #include "Player.h"
-#include "Keyboard.h"
 
 // The player's body is 40x40 by default, so half of it is 20
 static constexpr float kHalfSize = 20.0f;
 static constexpr float kMoveStep = 20.0f;    // pixels the ship creeps each frame while a move key is held
 static constexpr float kBulletSpeed = 12.0f; // pixels the bullet climbs each frame
-
-// The messages the player both asks the engine to send and listens for itself
-static const char* const kMoveLeftDown = "PlayerMoveLeft";
-static const char* const kMoveLeftUp = "PlayerMoveLeftUp";
-static const char* const kMoveRightDown = "PlayerMoveRight";
-static const char* const kMoveRightUp = "PlayerMoveRightUp";
-static const char* const kFire = "PlayerFire";
 
 Player::Player(CMPUT350::Point2D loc)
     : mLocation(loc)
@@ -24,19 +16,13 @@ Player::Player(CMPUT350::Point2D loc)
 
 void Player::Initialize(CMPUT350::GameContext* context)
 {
-    // A and D steer: the down event starts the ship moving, the up event stops it. Space fires on the way down only.
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::A, kMoveLeftDown);
-    context->mEngineView->InstallKeyUpNotification(CMPUT350::Key::A, kMoveLeftUp);
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::D, kMoveRightDown);
-    context->mEngineView->InstallKeyUpNotification(CMPUT350::Key::D, kMoveRightUp);
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::Space, kFire);
-
-    // The engine stamps whoever it is calling, so CurrObject is the player itself here
-    context->mNotificationManager->Register(context->CurrObject, kMoveLeftDown);
-    context->mNotificationManager->Register(context->CurrObject, kMoveLeftUp);
-    context->mNotificationManager->Register(context->CurrObject, kMoveRightDown);
-    context->mNotificationManager->Register(context->CurrObject, kMoveRightUp);
-    context->mNotificationManager->Register(context->CurrObject, kFire);
+    // The Galaga class installs the keys that send these messages; the player only says which ones it
+    // wants to hear. The engine stamps whoever it is calling, so CurrObject is the player itself here.
+    context->mNotificationManager->Register(context->CurrObject, kPlayerMoveLeft);
+    context->mNotificationManager->Register(context->CurrObject, kPlayerMoveLeftUp);
+    context->mNotificationManager->Register(context->CurrObject, kPlayerMoveRight);
+    context->mNotificationManager->Register(context->CurrObject, kPlayerMoveRightUp);
+    context->mNotificationManager->Register(context->CurrObject, kPlayerFire);
 }
 
 void Player::Update(CMPUT350::GameContext* context)
@@ -67,11 +53,11 @@ void Player::LateUpdate(CMPUT350::GameContext* context)
 void Player::ReceiveNotification(const std::string& key)
 {
     // Remember which direction keys are down; the movement itself is applied every frame in Update
-    if (key == kMoveLeftDown) mLeftHeld = true;
-    else if (key == kMoveLeftUp) mLeftHeld = false;
-    else if (key == kMoveRightDown) mRightHeld = true;
-    else if (key == kMoveRightUp) mRightHeld = false;
-    else if (key == kFire) mFireRequested = true;
+    if (key == kPlayerMoveLeft) mLeftHeld = true;
+    else if (key == kPlayerMoveLeftUp) mLeftHeld = false;
+    else if (key == kPlayerMoveRight) mRightHeld = true;
+    else if (key == kPlayerMoveRightUp) mRightHeld = false;
+    else if (key == kPlayerFire) mFireRequested = true;
 }
 
 void Player::Fire(CMPUT350::GameContext* context)

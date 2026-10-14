@@ -4,6 +4,14 @@
 #include "Bullet.h"
 #include "CollisionObject.h"
 
+// The messages the player listens for. The Galaga class installs the keys that send them, so both sides
+// agree on these names through this header instead of repeating the strings.
+inline constexpr const char* kPlayerMoveLeft = "PlayerMoveLeft";
+inline constexpr const char* kPlayerMoveLeftUp = "PlayerMoveLeftUp";
+inline constexpr const char* kPlayerMoveRight = "PlayerMoveRight";
+inline constexpr const char* kPlayerMoveRightUp = "PlayerMoveRightUp";
+inline constexpr const char* kPlayerFire = "PlayerFire";
+
 class Player : public CMPUT350::CollisionObject
 {
 public:
