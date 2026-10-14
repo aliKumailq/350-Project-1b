@@ -25,11 +25,14 @@ public:
 
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;
-    const CMPUT350::Rect& GetBounds() override;
+    const std::vector<CMPUT350::Shape>& GetShapes() override;
+    const CMPUT350::Rect& GetBounds() const override;
 
 private:
     bool mAlive;
-    CMPUT350::Rect mBounds; // enemies never move, so this is set once and reused for both collisions and drawing
+    CMPUT350::Point2D mLocation;          // the enemy's centre, which the engine uses to place its shapes
+    std::vector<CMPUT350::Shape> mShapes; // local box, fixed, so it stays valid once enemies start moving
+    mutable CMPUT350::Rect mBounds;       // world-space box, rebuilt from mLocation when asked
 };
 
 

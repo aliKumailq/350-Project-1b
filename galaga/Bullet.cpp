@@ -57,7 +57,16 @@ bool Bullet::IsAlive() const
     return mAlive;
 }
 
-const CMPUT350::Rect& Bullet::GetBounds()
+const std::vector<CMPUT350::Shape>& Bullet::GetShapes()
+{
+    // The bullet's location is its nose, so in local space the swept path runs from where it was (relative
+    // to where it is now) back to the origin. Offsetting by GetLocation turns it into the world segment.
+    mShapes.clear();
+    mShapes.push_back(CMPUT350::Shape(CMPUT350::Line(mPreviousLocation - mLocation, CMPUT350::Point2D(0.0f, 0.0f))));
+    return mShapes;
+}
+
+const CMPUT350::Rect& Bullet::GetBounds() const
 {
     // Box around last frame's position and this one, so a fast bullet still hits what it passed through
     mBounds = CMPUT350::Rect(mPreviousLocation, mLocation);

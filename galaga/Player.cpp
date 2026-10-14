@@ -16,6 +16,10 @@ static const char* const kFire = "PlayerFire";
 Player::Player(CMPUT350::Point2D loc)
     : mLocation(loc)
 {
+    // One box around the ship, in local space, so the engine places it by GetLocation. Local means the
+    // shape stays valid as the player moves; only the location changes.
+    mShapes.push_back(CMPUT350::Shape(
+        CMPUT350::Rect(CMPUT350::Point2D(-kHalfSize, -kHalfSize), 2.0f * kHalfSize, 2.0f * kHalfSize)));
 }
 
 void Player::Initialize(CMPUT350::GameContext* context)
@@ -135,7 +139,12 @@ bool Player::IsAlive() const
     return (true); // the player is permanent, so it never leaves the engine
 }
 
-const CMPUT350::Rect& Player::GetBounds()
+const std::vector<CMPUT350::Shape>& Player::GetShapes()
+{
+    return mShapes; // local, so it is built once and handed back unchanged
+}
+
+const CMPUT350::Rect& Player::GetBounds() const
 {
     // The player moves, so the box is rebuilt from the current centre every time it is asked for
     mBounds = CMPUT350::Rect(mLocation - CMPUT350::Point2D(kHalfSize, kHalfSize), 2 * kHalfSize, 2 * kHalfSize);

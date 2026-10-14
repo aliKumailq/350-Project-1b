@@ -87,7 +87,16 @@ public:
         }
     }
 
-    const CMPUT350::Rect& GetBounds() override
+    const std::vector<CMPUT350::Shape>& GetShapes() override
+    {
+        // The ball reports its location as (0,0) and draws itself in world space, so its shape carries the
+        // real centre and the engine's offset leaves it alone
+        mShapes.clear();
+        mShapes.push_back(CMPUT350::Shape(CMPUT350::Circle(mLoc, (float)mRadius)));
+        return mShapes;
+    }
+
+    const CMPUT350::Rect& GetBounds() const override
     {
         // A static here would be shared by every Ball, so each ball keeps its own box
         mBounds = CMPUT350::Rect(mLoc - mRadius, 2 * mRadius, 2 * mRadius);
@@ -113,7 +122,8 @@ private:
 
     int mRadius, mNumCollisions, mFrameCollisions;
     CMPUT350::Point2D mLoc, mSpeed, mSpeedNext, mCollisionPoint;
-    CMPUT350::Rect mBounds;
+    mutable CMPUT350::Rect mBounds;
+    std::vector<CMPUT350::Shape> mShapes;
 };
 
 // Shared randoms across all balls
