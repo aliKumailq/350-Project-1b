@@ -13,7 +13,7 @@ public:
     void Initialize(CMPUT350::GameContext* context) override;
     void Update(CMPUT350::GameContext* context) override;
     void LateUpdate(CMPUT350::GameContext* context) override;
-    bool HandleKeyEvent(CMPUT350::GameContext* context, char key) override;
+    void ReceiveNotification(const std::string& key) override;
     bool IsAlive() const override;
     void Kill() override;
 
@@ -35,6 +35,11 @@ private:
     CMPUT350::Point2D mLocation;         // the player's centre
     std::weak_ptr<Bullet> mBullets[2];   // the player watches the two shots the engine owns; an empty slot is a free one
     CMPUT350::Rect mBounds;              // GetBounds returns a reference, so something has to own the rectangle
+
+    // Held-key state, so a held key keeps moving the ship every frame instead of only once per OS key repeat
+    bool mLeftHeld = false;
+    bool mRightHeld = false;
+    bool mFireRequested = false;         // a fire message carries no context, so the shot is spawned on the next Update
 };
 
 #endif

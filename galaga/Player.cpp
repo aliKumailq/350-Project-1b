@@ -1,9 +1,17 @@
 #include "Player.h"
+#include "Keyboard.h"
 
 // The player's body is 40x40 by default, so half of it is 20
 static constexpr float kHalfSize = 20.0f;
-static constexpr float kMoveStep = 20.0f;    // pixels moved by a single A or D press
+static constexpr float kMoveStep = 20.0f;    // pixels the ship creeps each frame while a move key is held
 static constexpr float kBulletSpeed = 12.0f; // pixels the bullet climbs each frame
+
+// The messages the player both asks the engine to send and listens for itself
+static const char* const kMoveLeftDown = "PlayerMoveLeft";
+static const char* const kMoveLeftUp = "PlayerMoveLeftUp";
+static const char* const kMoveRightDown = "PlayerMoveRight";
+static const char* const kMoveRightUp = "PlayerMoveRightUp";
+static const char* const kFire = "PlayerFire";
 
 Player::Player(CMPUT350::Point2D loc)
     : mLocation(loc)
@@ -12,41 +20,54 @@ Player::Player(CMPUT350::Point2D loc)
 
 void Player::Initialize(CMPUT350::GameContext* context)
 {
+    // A and D steer: the down event starts the ship moving, the up event stops it. Space fires on the way down only.
+    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::A, kMoveLeftDown);
+    context->mEngineView->InstallKeyUpNotification(CMPUT350::Key::A, kMoveLeftUp);
+    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::D, kMoveRightDown);
+    context->mEngineView->InstallKeyUpNotification(CMPUT350::Key::D, kMoveRightUp);
+    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::Space, kFire);
+
+    // The engine stamps whoever it is calling, so CurrObject is the player itself here
+    context->mNotificationManager->Register(context->CurrObject, kMoveLeftDown);
+    context->mNotificationManager->Register(context->CurrObject, kMoveLeftUp);
+    context->mNotificationManager->Register(context->CurrObject, kMoveRightDown);
+    context->mNotificationManager->Register(context->CurrObject, kMoveRightUp);
+    context->mNotificationManager->Register(context->CurrObject, kFire);
 }
 
 void Player::Update(CMPUT350::GameContext* context)
 {
+    // Movement happens once per frame while a key is held, so the ship glides instead of stepping at the OS repeat rate.
+    // Only x moves: operator+=(float) shifts both axes, so it would send the player diagonally.
+    float dx = 0.0f;
+    if (mLeftHeld) dx -= kMoveStep;
+    if (mRightHeld) dx += kMoveStep;
+    if (dx != 0.0f)
+    {
+        mLocation.x += dx;
+        ClampToScreen(context);
+    }
+
+    // Fire is spawned here, not in the notification, because only Update is handed a context
+    if (mFireRequested)
+    {
+        mFireRequested = false;
+        Fire(context);
+    }
 }
 
 void Player::LateUpdate(CMPUT350::GameContext* context)
 {
 }
 
-bool Player::HandleKeyEvent(CMPUT350::GameContext* context, char key)
+void Player::ReceiveNotification(const std::string& key)
 {
-    // Lower case is an ordinary press, upper case is the same key pressed with shift held
-    if (key == 'a' || key == 'A')
-    {
-        // Only x moves: operator+=(float) shifts both axes, so it would send the player diagonally
-        mLocation.x -= kMoveStep;
-        ClampToScreen(context);
-        return (true);
-    }
-
-    if (key == 'd' || key == 'D')
-    {
-        mLocation.x += kMoveStep;
-        ClampToScreen(context);
-        return (true);
-    }
-
-    if (key == ' ')
-    {
-        Fire(context);
-        return (true); // space is the player's key even when both shots are still in flight
-    }
-
-    return (false);
+    // Remember which direction keys are down; the movement itself is applied every frame in Update
+    if (key == kMoveLeftDown) mLeftHeld = true;
+    else if (key == kMoveLeftUp) mLeftHeld = false;
+    else if (key == kMoveRightDown) mRightHeld = true;
+    else if (key == kMoveRightUp) mRightHeld = false;
+    else if (key == kFire) mFireRequested = true;
 }
 
 void Player::Fire(CMPUT350::GameContext* context)
