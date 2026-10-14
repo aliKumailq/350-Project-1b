@@ -9,7 +9,10 @@ class GameEngine;
 #include "EngineView.h"
 #include "GameObject.h"
 #include "MathUtil.h"
+#include "NotificationManager.h"
 #include <SFML/Graphics.hpp>
+#include <string>
+#include <unordered_map>
 
 namespace CMPUT350 {
 
@@ -28,6 +31,16 @@ public:
 
     void AddGameObject(std::shared_ptr<GameObject> gameObject) override;
 
+    // Keys the game cares about; the engine fires these strings when the key goes down or comes up
+    void InstallKeyDownNotification(int scancode, const std::string &notification) override;
+    void InstallKeyUpNotification(int scancode, const std::string &notification) override;
+
+    // Read-only access to the objects the engine is holding, so a game can scan the scene
+    EngineView::const_iterator cbegin() const override;
+    EngineView::const_iterator cend() const override;
+    EngineView::const_iterator begin() const override;
+    EngineView::const_iterator end() const override;
+
     void Run();
 
 private:
@@ -36,9 +49,15 @@ private:
         std::vector<std::shared_ptr<GameObject>> mGameObjects;
         std::vector<std::shared_ptr<GameObject>> mLateGameObjects;
 
+        // Scancode -> notification string, filled by InstallKey*Notification and read on each key event
+        std::unordered_map<int, std::string> mKeyDownNotifications;
+        std::unordered_map<int, std::string> mKeyUpNotifications;
+
+        NotificationManager mNotificationManager;
+
         bool mCloseGame;
 
-        inline void PollWindow(GameContext* context);
+        inline void PollWindow();
         inline void ProcessCollisions();
 };
 

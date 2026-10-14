@@ -22,10 +22,14 @@ void Stars::RenderBackground(CMPUT350::GameContext* context)
     static int skip = 0;
     int curr = 0;
     skip++;
+    // Twinkling hides roughly one in every size/20 stars each frame, and skip/5 slides which ones.
+    // Clamp the step to at least 1 so a field of fewer than 20 stars cannot divide by zero below.
+    size_t step = mStarPositions.size() / 20;
+    if (step == 0) step = 1;
     for (auto& star : mStarPositions)
     {
         curr++;
-        if ((curr + skip / 5) % (mStarPositions.size() / 20) != 0)
+        if ((curr + skip / 5) % step != 0)
             context->ScreenContext->DrawCircle(star, 1.0f, c[(curr) % 4]);
         star.y += 3;
         if (star.y > mBounds.topLeft.y + mBounds.height)
