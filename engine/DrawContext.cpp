@@ -69,6 +69,9 @@ void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
 void DrawContext::DrawRect(Rect r, RGBColor c) {
     sf::RectangleShape rectangle;
 
+    // The rect comes in the object's local space, so the context shifts it by the offset, exactly like
+    // the circle, line and text draws do, before the window ever sees it
+    r.topLeft += mOffset;
     rectangle.setPosition({r.topLeft.x, r.topLeft.y});
     rectangle.setSize(sf::Vector2f(r.width, r.height));
     rectangle.setFillColor(sf::Color(c.r, c.g, c.b));

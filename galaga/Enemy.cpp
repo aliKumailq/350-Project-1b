@@ -30,8 +30,11 @@ void Enemy::RenderBackground(CMPUT350::GameContext* context)
 
 void Enemy::RenderForeground(CMPUT350::GameContext* context)
 {
-    // Draw exactly the box the collisions use, so the enemy's picture and its hitbox can't disagree
-    context->ScreenContext->DrawRect(GetBounds(), CMPUT350::Colors::green);
+    // Draw exactly the box the collisions use, in local space so the engine's offset keeps the picture
+    // and the hitbox together
+    context->ScreenContext->DrawRect(
+        CMPUT350::Rect(CMPUT350::Point2D(-kHalfSize, -kHalfSize), 2.0f * kHalfSize, 2.0f * kHalfSize),
+        CMPUT350::Colors::green);
 }
 
 void Enemy::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj)
