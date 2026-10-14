@@ -7,6 +7,9 @@
 #include "CollisionObject.h"
 #include "GameContext.h"
 
+// The message an enemy sends when it is destroyed. The Galaga class listens for it to score the kill.
+inline constexpr const char* kEnemyDestroyed = "EnemyDestroyed";
+
 // Enemy is the base class for every hostile ship. Everything the types share lives here: flying in along
 // a bezier entry path, hovering in the formation, diving along an attack path and coming back, losing
 // health, and telling the game when it dies. A subclass only answers Attack (which curve it dives on)

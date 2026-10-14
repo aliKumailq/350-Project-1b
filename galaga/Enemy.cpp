@@ -16,9 +16,6 @@ static constexpr float kHoverRate = 0.06f;
 // How fast an enemy shot drops, in pixels per frame (down the screen, so y grows)
 static constexpr float kEnemyBulletSpeed = 10.0f;
 
-// The message an enemy sends when it dies, which the Galaga class listens for
-static const char* const kDestroyed = "EnemyDestroyed";
-
 Enemy::Enemy(CMPUT350::Point2D loc, const std::vector<CMPUT350::Point2D>& entryPath, int health, int points)
     : mHealth(health), mMaxHealth(health), mPoints(points), mAlive(true),
       mLocation(loc), mRotation(0.0f), mFormation(loc),
@@ -80,7 +77,7 @@ void Enemy::LateUpdate(CMPUT350::GameContext* context)
     if (!mAlive && !mNotified)
     {
         mNotified = true;
-        context->mNotificationManager->Notify(kDestroyed);
+        context->mNotificationManager->Notify(kEnemyDestroyed);
     }
 }
 

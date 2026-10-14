@@ -22,7 +22,7 @@ static constexpr int kAttackInterval = 30; // frames between the game sending a 
 
 Galaga::Galaga(int windowWidth, int windowHeight)
     : mState(State::kWaiting), mFrameInState(0), mCoins(0), mScore(0), mLives(kStartLives), mLevel(1),
-      mWaveIndex(0), mSpawnIndex(0), mStartRequested(false),
+      mWaveIndex(0), mSpawnIndex(0), mStartRequested(false), mRespawnPending(false),
       mWindowWidth(windowWidth), mWindowHeight(windowHeight)
 {
 }
@@ -39,9 +39,12 @@ void Galaga::Initialize(CMPUT350::GameContext* context)
     context->mEngineView->InstallKeyUpNotification(CMPUT350::Key::D, kPlayerMoveRightUp);
     context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::Space, kPlayerFire);
 
-    // Galaga hears the coin and start keys itself; the player's messages go to the player
+    // Galaga hears the coin and start keys itself, plus the death messages that drive scoring and lives;
+    // the player's own messages go to the player
     context->mNotificationManager->Register(context->CurrObject, kCoin);
     context->mNotificationManager->Register(context->CurrObject, kStart);
+    context->mNotificationManager->Register(context->CurrObject, kEnemyDestroyed);
+    context->mNotificationManager->Register(context->CurrObject, kPlayerDestroyed);
 
     // The starfield is the backdrop for the whole session
     context->mEngineView->AddGameObject(
@@ -91,17 +94,18 @@ void Galaga::LateUpdate(CMPUT350::GameContext* context)
 void Galaga::ReceiveNotification(const std::string& key)
 {
     // The coin and start keys only mean anything on the title screen
-    if (mState != State::kWaiting) return;
+    if (key == kCoin || key == kStart)
+    {
+        if (mState != State::kWaiting) return;
 
-    if (key == kCoin)
-    {
-        mCoins++;
+        if (key == kCoin) mCoins++;
+        else if (mCoins > 0) mStartRequested = true; // a key carries no context, so start on the next Update
+        return;
     }
-    else if (key == kStart && mCoins > 0)
-    {
-        // A key message carries no context, so the game is actually started on the next Update
-        mStartRequested = true;
-    }
+
+    // A ship that died is scored here, while it is still around to be read, and dropped from the count
+    if (key == kEnemyDestroyed) SweepEnemies();
+    else if (key == kPlayerDestroyed) OnPlayerDestroyed();
 }
 
 bool Galaga::IsAlive() const
@@ -149,8 +153,12 @@ void Galaga::StartNewGame(CMPUT350::GameContext* context)
 
 void Galaga::SpawnPlayer(CMPUT350::GameContext* context)
 {
-    // Created once and reused; the engine keeps it alive, so later levels just leave it where it is
-    if (mPlayer) return;
+    // Created once and reused; the engine keeps it alive, so a later game just puts it back in play
+    if (mPlayer)
+    {
+        mPlayer->Revive();
+        return;
+    }
 
     mPlayer = std::make_shared<Player>(
         CMPUT350::Point2D(float(mWindowWidth) / 2.0f, float(mWindowHeight) - 120.0f));
@@ -223,8 +231,20 @@ void Galaga::UpdateWaves(CMPUT350::GameContext* context)
 
 void Galaga::UpdateGameplay(CMPUT350::GameContext* context)
 {
-    // Clear out the ships that are gone first, so an empty list really means the wave is beaten
-    PruneEnemies();
+    // Score and clear out the ships that are gone first, so an empty list really means the wave is beaten
+    SweepEnemies();
+
+    // While the player is down, no ships are sent and nothing else happens until the field is quiet
+    if (mRespawnPending)
+    {
+        if (AllSettled())
+        {
+            mRespawnPending = false;
+            if (mLives > 0) mPlayer->Revive();
+            else EndGame();
+        }
+        return;
+    }
 
     if (mEnemies.empty())
     {
@@ -264,15 +284,54 @@ void Galaga::LaunchAttack(CMPUT350::GameContext* context)
     chosen->Attack(context, target);
 }
 
-void Galaga::PruneEnemies()
+void Galaga::SweepEnemies()
 {
-    // A ship that is gone, or dead and about to be removed, no longer counts as part of the wave
-    mEnemies.erase(std::remove_if(mEnemies.begin(), mEnemies.end(),
-                                  [](const std::weak_ptr<Enemy>& weak) {
-                                      auto enemy = weak.lock();
-                                      return !enemy || !enemy->IsAlive();
-                                  }),
-                   mEnemies.end());
+    // A dead ship is worth points (doubled when it was away from its slot) and is then dropped, so it is
+    // scored exactly once and the count only holds the living
+    for (auto it = mEnemies.begin(); it != mEnemies.end(); )
+    {
+        auto enemy = it->lock();
+        if (!enemy || !enemy->IsAlive())
+        {
+            if (enemy) mScore += enemy->Points();
+            it = mEnemies.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
+bool Galaga::AllSettled() const
+{
+    // Any living ship still out on a dive keeps the field busy
+    for (auto& weak : mEnemies)
+    {
+        auto enemy = weak.lock();
+        if (enemy && enemy->IsAlive() && !enemy->InFormation()) return false;
+    }
+    return true;
+}
+
+void Galaga::OnPlayerDestroyed()
+{
+    // A life is spent; the re-spawn itself waits for the ships to come home
+    mLives--;
+    mRespawnPending = true;
+}
+
+void Galaga::EndGame()
+{
+    // Take the remaining ships off the board, so the next game starts from a clean screen
+    for (auto& weak : mEnemies)
+    {
+        if (auto enemy = weak.lock()) enemy->Kill();
+    }
+    mEnemies.clear();
+    mSpawnPlan.clear();
+    mRespawnPending = false;
+    EnterState(State::kGameOver);
 }
 
 void Galaga::DrawHud(CMPUT350::GameContext* context)
@@ -305,5 +364,11 @@ void Galaga::DrawHud(CMPUT350::GameContext* context)
     else if (mState == State::kGameOver)
     {
         gui->DrawCenteredText("GAME OVER", 46, CMPUT350::Point2D(w / 2.0f, h / 2.0f), CMPUT350::Colors::red);
+    }
+    else if (mRespawnPending)
+    {
+        // The player is down and the ships are coming home; say how many lives are left
+        gui->DrawCenteredText("SHIPS LEFT  " + std::to_string(mLives), 30, CMPUT350::Point2D(w / 2.0f, h / 2.0f),
+                              CMPUT350::Colors::cyan);
     }
 }

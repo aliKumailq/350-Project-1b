@@ -50,8 +50,14 @@ private:
     void UpdateGameplay(CMPUT350::GameContext* context);
     // Ask one settled ship to dive at the player, choosing it from the engine's object list
     void LaunchAttack(CMPUT350::GameContext* context);
-    // Drop the enemies that are gone, so an empty list means the wave is cleared
-    void PruneEnemies();
+    // Score the ships that have died and drop them, so an empty list means the wave is cleared
+    void SweepEnemies();
+    // True when no living ship is still away from its slot
+    bool AllSettled() const;
+    // A life is spent; the re-spawn waits until the ships are home
+    void OnPlayerDestroyed();
+    // Clear the field and show the game-over screen
+    void EndGame();
     // Draw the score, lives, level and any state message
     void DrawHud(CMPUT350::GameContext* context);
 
@@ -64,6 +70,7 @@ private:
     int mWaveIndex;                              // which of the level's five waves is out
     int mSpawnIndex;                             // how many of the current wave's ships have been released
     bool mStartRequested;                        // the start key was pressed; handled on the next Update
+    bool mRespawnPending;                        // the player is down; put it back once the ships are home
 
     std::vector<std::shared_ptr<Enemy>> mSpawnPlan;   // the wave waiting to be released, one ship at a time
     std::vector<std::weak_ptr<Enemy>> mEnemies;  // the ships out on screen, watched weakly
