@@ -9,6 +9,7 @@ class GameEngine;
 #include "EngineView.h"
 #include "GameObject.h"
 #include "MathUtil.h"
+#include "NotificationManager.h"
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <unordered_map>
@@ -51,6 +52,8 @@ private:
         // Scancode -> notification string, filled by InstallKey*Notification and read on each key event
         std::unordered_map<int, std::string> mKeyDownNotifications;
         std::unordered_map<int, std::string> mKeyUpNotifications;
+
+        NotificationManager mNotificationManager;
 
         bool mCloseGame;
 

@@ -120,6 +120,11 @@ void GameEngine::Run() {
     ctx.mEngineView = this;
     DrawContext drawCtx = DrawContext(mWindow, mFont);
     ctx.ScreenContext = &drawCtx;
+    // A second context for UI: it is never handed an object's transform, so it draws in screen space
+    DrawContext guiCtx = DrawContext(mWindow, mFont);
+    ctx.GUIContext = &guiCtx;
+    ctx.mNotificationManager = &mNotificationManager;
+    ctx.currentFrame = 0;
 
     mWindow->setFramerateLimit(30); // Needed since physics are tied to the engine.
     // Not sure if this is supposed to be hardcoded or if the user sets it yet.
@@ -147,14 +152,15 @@ void GameEngine::Run() {
         mLateGameObjects.clear();
 
         // Initialize ONLY the objects we just added. firstNew marks where the old objects stop and the new objects begin.
-        for (size_t i = firstNew; i < mGameObjects.size(); i++) mGameObjects[i]->Initialize(&ctx);
+        for (size_t i = firstNew; i < mGameObjects.size(); i++) { ctx.CurrObject = mGameObjects[i]; mGameObjects[i]->Initialize(&ctx); }
 
         // 2. Process events
         PollWindow(&ctx);
         if (mCloseGame) return;
 
         // 3. Update game objects
-        for (auto& obj : mGameObjects) obj->Update(&ctx);
+        // Stamp the object being called so anything it creates can hold a weak reference back to it
+        for (auto& obj : mGameObjects) { ctx.CurrObject = obj; obj->Update(&ctx); }
 
         // 4. Process collision events
         ProcessCollisions();
@@ -186,6 +192,9 @@ void GameEngine::Run() {
 
         // Actually render to window
         mWindow->display();
+
+        // A global clock, so no object has to track frames on its own
+        ctx.currentFrame++;
     }
 }
 
