@@ -3,6 +3,7 @@
 
 #include "CollisionObject.h"
 #include "GameContext.h"
+#include "MathUtil.h"
 
 class Enemy : public CMPUT350::CollisionObject
 {
@@ -31,6 +32,7 @@ public:
 private:
     bool mAlive;
     CMPUT350::Rect mBounds; // enemies never move, so this is set once and reused for both collisions and drawing
+    CMPUT350::Point2D mLocation;
 };
 
 
