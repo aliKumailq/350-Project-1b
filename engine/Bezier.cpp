@@ -49,7 +49,7 @@ Bezier::Bezier(const std::vector<CMPUT350::Point2D> &pts) : m_pts(pts) {
     assert(pts.size() > BEZIER_DIMENSION);
 }
 
-inline CMPUT350::Point2D Bezier::GetPoint(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
+CMPUT350::Point2D Bezier::GetPoint(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
     assert(pts.size() > BEZIER_DIMENSION); 
     const int max_t = int((pts.size() - 1) / BEZIER_DIMENSION);
     assert(t >= 0 && t <= max_t);
@@ -60,7 +60,7 @@ inline CMPUT350::Point2D Bezier::GetPoint(const std::vector<CMPUT350::Point2D> &
 
 }
 
-inline CMPUT350::Point2D Bezier::GetSlope(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
+CMPUT350::Point2D Bezier::GetSlope(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
     assert(pts.size() > BEZIER_DIMENSION); 
     const int max_t = int((pts.size() - 1) / BEZIER_DIMENSION);
     assert(t >= 0 && t <= max_t);
