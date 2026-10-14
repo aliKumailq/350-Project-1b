@@ -2,7 +2,6 @@
 #include "GameEngine.h"
 #include "MathUtil.h"
 #include "Player.h"
-#include "Enemy.h"
 #include "Stars.h"
 
 class Ball : public CMPUT350::CollisionObject
@@ -150,15 +149,8 @@ int main()
         auto player = std::make_shared<Player>(CMPUT350::Point2D(768 / 2, 900));
         engine.AddGameObject(player);
         engine.AddGameObject(std::make_shared<Stars>(250, CMPUT350::Rect(0, 0, 768, 1024)));
-        // 40 enemies evenly spread across the top. One row would be 1600px of enemy in a 768px window,
-        // so they form a grid: 8 columns 96 apart, 5 rows 60 apart, none of them overlapping.
-        for (int row = 0; row < 5; row++)
-        {
-            for (int col = 0; col < 8; col++)
-            {
-                engine.AddGameObject(std::make_shared<Enemy>(CMPUT350::Point2D(48 + col * 96, 80 + row * 60)));
-            }
-        }
+        // The enemies and the Galaga manager that spawns them come next; Enemy is only a base class and
+        // cannot be placed on its own.
         engine.Run();
     }
     return 0;
