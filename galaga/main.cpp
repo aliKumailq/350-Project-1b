@@ -3,6 +3,9 @@
 #include "MathUtil.h"
 #include "Player.h"
 #include "Stars.h"
+#include "Zako.h"
+#include "Goei.h"
+#include "Boss.h"
 
 class Ball : public CMPUT350::CollisionObject
 {
@@ -149,8 +152,16 @@ int main()
         auto player = std::make_shared<Player>(CMPUT350::Point2D(768 / 2, 900));
         engine.AddGameObject(player);
         engine.AddGameObject(std::make_shared<Stars>(250, CMPUT350::Rect(0, 0, 768, 1024)));
-        // The enemies and the Galaga manager that spawns them come next; Enemy is only a base class and
-        // cannot be placed on its own.
+        // Temporary scene while the Galaga manager is being written: one of each enemy type, so their
+        // entry, hover and colours can be watched. This goes away once Galaga spawns the waves itself.
+        auto entryTo = [](float x, float y) {
+            return std::vector<CMPUT350::Point2D>{
+                CMPUT350::Point2D(x, -80.0f), CMPUT350::Point2D(x + 120.0f, 220.0f),
+                CMPUT350::Point2D(x - 120.0f, 420.0f), CMPUT350::Point2D(x, y)};
+        };
+        engine.AddGameObject(std::make_shared<ZakoEnemy>(CMPUT350::Point2D(240, 140), entryTo(240, 140)));
+        engine.AddGameObject(std::make_shared<GoeiEnemy>(CMPUT350::Point2D(384, 140), entryTo(384, 140)));
+        engine.AddGameObject(std::make_shared<BossEnemy>(CMPUT350::Point2D(528, 140), entryTo(528, 140)));
         engine.Run();
     }
     return 0;
