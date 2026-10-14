@@ -92,11 +92,11 @@ void Player::RenderForeground(CMPUT350::GameContext* context)
     // Each shape is a fraction of the hitbox half-size, so the ship can never reach outside the box it collides with. Later calls paint over earlier ones, so this runs back to front: wings, then body, then cockpit.
     const float h = kHalfSize;
 
-    context->ScreenContext->DrawRect(CMPUT350::Rect(mLocation.x - h, mLocation.y + 0.2f * h, 2.0f * h, 0.8f * h),
+    context->ScreenContext->DrawRect(CMPUT350::Rect(0 - h, 0 + 0.2f * h, 2.0f * h, 0.8f * h),
                                      CMPUT350::Colors::gray);
-    context->ScreenContext->DrawRect(CMPUT350::Rect(mLocation.x - 0.3f * h, mLocation.y - h, 0.6f * h, 2.0f * h),
+    context->ScreenContext->DrawRect(CMPUT350::Rect(0 - 0.3f * h, 0 - h, 0.6f * h, 2.0f * h),
                                      CMPUT350::Colors::grey);
-    context->ScreenContext->DrawCircle(mLocation - CMPUT350::Point2D(0.0f, 0.4f * h), 0.3f * h,
+    context->ScreenContext->DrawCircle(CMPUT350::Point2D(0,0) - CMPUT350::Point2D(0.0f, 0.4f * h), 0.3f * h,
                                        CMPUT350::Colors::cyan);
 }
 

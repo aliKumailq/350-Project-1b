@@ -2,10 +2,10 @@
 #include "Bullet.h"
 
 Enemy::Enemy(CMPUT350::Point2D loc)
-    : mAlive(true)
+    : mAlive(true), mLocation(loc)
 {
     // Make a 40×40 rectangle whose center is at the given loc
-    mBounds = CMPUT350::Rect(loc - CMPUT350::Point2D(20.0f, 20.0f), 40.0f, 40.0f);
+    mBounds = CMPUT350::Rect(mLocation - CMPUT350::Point2D(20.0f, 20.0f), 40.0f, 40.0f);
     mShapes = {};
 }
 
@@ -33,7 +33,9 @@ void Enemy::RenderBackground(CMPUT350::GameContext* context)
 void Enemy::RenderForeground(CMPUT350::GameContext* context)
 {
     // Draw exactly the box the collisions use, so the enemy's picture and its hitbox can't disagree
-    context->ScreenContext->DrawRect(mBounds, CMPUT350::Colors::green);
+    auto boundDraw = mBounds;
+    boundDraw.topLeft -= mLocation;
+    context->ScreenContext->DrawRect(boundDraw, CMPUT350::Colors::green);
 }
 
 void Enemy::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj)
@@ -55,7 +57,7 @@ bool Enemy::IsAlive() const
 
 const CMPUT350::Rect& Enemy::GetBounds()
 {
-    return mBounds; // the enemy never moves, so its box is fixed from construction
+    return mBounds;
 }
 
 
@@ -67,7 +69,7 @@ const std::vector<CMPUT350::Shape>& Enemy::GetShapes()  {
 }
 
 CMPUT350::Point2D Enemy::GetLocation() const {
-    return mBounds.topLeft;
+    return mLocation;
 }
 
 float Enemy::GetRotation() const {

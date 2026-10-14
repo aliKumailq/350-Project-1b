@@ -133,7 +133,6 @@ public:
 	
 	float GetRotation() const override
 	{
-		return 0;
 		return mRotation*3.14159265358979323846f/180.0f;
 	}
 	
@@ -215,7 +214,6 @@ public:
 	
 	float GetRotation() const override
 	{
-		return 0;
 		return mRotation;
 	}
 	
