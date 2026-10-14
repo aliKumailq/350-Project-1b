@@ -94,6 +94,20 @@ void GameEngine::AddGameObject(std::shared_ptr<GameObject> gameObject) {
     mLateGameObjects.push_back(gameObject);
 }
 
+void GameEngine::InstallKeyDownNotification(int scancode, const std::string &notification) {
+    mKeyDownNotifications[scancode] = notification;
+}
+
+void GameEngine::InstallKeyUpNotification(int scancode, const std::string &notification) {
+    mKeyUpNotifications[scancode] = notification;
+}
+
+// The engine owns the object list, so it is the one that can hand out iterators over it
+EngineView::const_iterator GameEngine::cbegin() const { return mGameObjects.cbegin(); }
+EngineView::const_iterator GameEngine::cend() const { return mGameObjects.cend(); }
+EngineView::const_iterator GameEngine::begin() const { return mGameObjects.begin(); }
+EngineView::const_iterator GameEngine::end() const { return mGameObjects.end(); }
+
 /**
  * @method Run
  * @arguments None
