@@ -132,6 +132,6 @@ float Player::GetRotation() const {
 }
 
 
-const std::vector<CMPUT350::Shape> &Player::GetShapes() const {
+const std::vector<CMPUT350::Shape> &Player::GetShapes()  {
     return mShapes;
 }

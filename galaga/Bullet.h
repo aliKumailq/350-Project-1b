@@ -28,8 +28,8 @@ public:
 
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;
-    const CMPUT350::Rect& GetBounds() const override;
-    const std::vector<CMPUT350::Shape> &GetShapes() const override;
+    const CMPUT350::Rect& GetBounds()  override;
+    const std::vector<CMPUT350::Shape> &GetShapes() override;
 
 private:
     // mPreviousLocation is kept so the bounds can cover the whole step, not just where the bullet ended up

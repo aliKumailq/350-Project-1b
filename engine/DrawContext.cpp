@@ -25,6 +25,7 @@ inline sf::Text DrawContext::GetSfText(const std::string& text, int pixelSize, P
     sf::Text my_text(*mFont, text, pixelSize);
     my_text.setFillColor(sf::Color(c.r, c.g, c.b));
     my_text.setPosition(sf::Vector2f(p.x, p.y));
+    my_text.rotate(sf::degrees(mRotation));
     return my_text;
 }
 
@@ -39,12 +40,15 @@ void DrawContext::DrawCenteredText(const std::string& text, int pixelSize,Point2
     // But that marks the origin of an sf::Texts local origin coordinate system, not the top left
     // corner of thebounding box So we have to offset FROM the top left of the bounding box to its
     // center.
+    my_text.rotate(sf::degrees(mRotation));
 
     mWindow->draw(my_text);
 }
 
 void DrawContext::DrawText(const std::string& text, int pixelSize, Point2D p, RGBColor c) {
-    mWindow->draw(GetSfText(text, pixelSize, p + mOffset, c));
+    auto txt = GetSfText(text, pixelSize, p + mOffset, c);
+    txt.rotate(sf::degrees(mRotation));
+    mWindow->draw(txt);
 }
 
 void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
@@ -62,16 +66,21 @@ void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
     // Fixing this after implementing DrawCenterText
 
     circle.setOrigin(new_origin);
+    circle.rotate(sf::degrees(mRotation));
 
     mWindow->draw(circle);
 }
 
 void DrawContext::DrawRect(Rect r, RGBColor c) {
     sf::RectangleShape rectangle;
-
+    rectangle.setOrigin(GetSfVec(mOffset));
     rectangle.setPosition({r.topLeft.x, r.topLeft.y});
     rectangle.setSize(sf::Vector2f(r.width, r.height));
     rectangle.setFillColor(sf::Color(c.r, c.g, c.b));
+
+    rectangle.rotate(sf::degrees(mRotation));
+
+
 
     mWindow->draw(rectangle);
 }
@@ -116,6 +125,7 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
     line.setFillColor(GetSfColor(c));
     line.setPosition(GetSfVec(mOffset + from));
 
+    line.setOrigin(GetSfVec(mOffset));
     mWindow->draw(line);
 }
 
@@ -156,6 +166,7 @@ Rect DrawContext::Transform(Rect r) {
     const Point2D rectangle_center(center_x, center_y);
     r.topLeft = TransformPoint(r.topLeft - rectangle_center, mRotation_cos, mRotation_sin) +
                 rectangle_center;
+
     return r;
 }
 

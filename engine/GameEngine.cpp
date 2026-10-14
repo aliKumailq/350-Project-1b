@@ -79,7 +79,8 @@ inline void GameEngine::ProcessCollisions() {
         for (size_t j = i + 1; j < colliders.size(); j++) {
             // Being CollisionObjects only means they CAN collide. Overlaps answers if their bounding boxes actually touching or overlapping
             CMPUT350::Point2D pnt;
-            if (collision(*colliders[i], *colliders[j], pnt)) {
+            // collision(*colliders[i], *colliders[j], pnt)
+            if (Overlaps(colliders[i]->GetBounds(), colliders[j]->GetBounds())) {
                 // If they are overlapping, tell BOTH objects about the same collision; The pair itself is checked only once, but each participant gets its own notification.
                 colliders[i]->CollisionEnter(colliders[j], pnt);
                 colliders[j]->CollisionEnter(colliders[i],pnt);
