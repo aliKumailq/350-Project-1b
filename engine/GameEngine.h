@@ -57,7 +57,7 @@ private:
 
         bool mCloseGame;
 
-        inline void PollWindow(GameContext* context);
+        inline void PollWindow();
         inline void ProcessCollisions();
 };
 

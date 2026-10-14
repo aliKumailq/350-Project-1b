@@ -30,11 +30,6 @@ void Bullet::LateUpdate(CMPUT350::GameContext* context)
 {
 }
 
-bool Bullet::HandleKeyEvent(CMPUT350::GameContext* context, char key)
-{
-    return (false); // This expects a bool in return
-}
-
 void Bullet::RenderBackground(CMPUT350::GameContext* context)
 {
 }

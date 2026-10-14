@@ -18,7 +18,7 @@ GameEngine::GameEngine(unsigned int width, unsigned int height, const std::strin
     	}
 }
 
-inline void GameEngine::PollWindow(GameContext* context) {
+inline void GameEngine::PollWindow() {
 	while (const std::optional event = mWindow->pollEvent())
 	{
 		if (event->is<sf::Event::Closed>())
@@ -43,14 +43,6 @@ inline void GameEngine::PollWindow(GameContext* context) {
 			if (mKeyUpNotifications.find(scancode) != mKeyUpNotifications.end()) {
 				mNotificationManager.Notify(mKeyUpNotifications[scancode]);
 			}
-		}
-		else if (const auto* keyPressed = event->getIf<sf::Event::TextEntered>())
-		{
-			// we only handle low-order ASCII, so the unicode value can come down to a char
-			char key = static_cast<char>(keyPressed->unicode);
-
-			// every object hears every key press, and decides for itself whether it cares
-			for (auto& obj : mGameObjects) obj->HandleKeyEvent(context, key);
 		}
 	}
 }
@@ -171,7 +163,7 @@ void GameEngine::Run() {
         for (size_t i = firstNew; i < mGameObjects.size(); i++) { ctx.CurrObject = mGameObjects[i]; mGameObjects[i]->Initialize(&ctx); }
 
         // 2. Process events
-        PollWindow(&ctx);
+        PollWindow();
         if (mCloseGame) return;
 
         // 3. Update game objects
