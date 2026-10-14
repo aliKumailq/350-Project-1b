@@ -36,8 +36,9 @@ void Bullet::RenderBackground(CMPUT350::GameContext* context)
 
 void Bullet::RenderForeground(CMPUT350::GameContext* context)
 {
-    // Draw the same span the collision box covers, so what you see is what can be hit
-    context->ScreenContext->DrawLine(mPreviousLocation, mLocation, 3.0f,
+    // Draw relative to the bullet's own location, which the engine has already applied as the offset.
+    // So the tail sits at (previous - now) and the nose at the origin; together they are the world span.
+    context->ScreenContext->DrawLine(mPreviousLocation - mLocation, CMPUT350::Point2D(0.0f, 0.0f), 3.0f,
                                      mPlayer ? CMPUT350::Colors::white : CMPUT350::Colors::red);
 }
 
@@ -74,7 +75,7 @@ const CMPUT350::Rect& Bullet::GetBounds() const
 }
 
 CMPUT350::Point2D Bullet::GetLocation() const {
-    return CMPUT350::Point2D(0,0);
+    return mLocation; // the nose, which is also the pivot: the bullet's shapes and drawing are relative to it
 }
 
 float Bullet::GetRotation() const {
