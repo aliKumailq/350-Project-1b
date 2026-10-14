@@ -18,8 +18,16 @@ public:
     void Unregister(std::weak_ptr<GameObject> object, const std::string& key);
     void Notify(const std::string& message);
 
+    // Recording keeps a log of every message that reaches a listener, so a run can be captured and
+    // played back later instead of being re-driven by hand
+    void StartRecording();
+    void StopRecording();
+    void Replay();
+
 private:
     std::unordered_map<std::string, std::vector<std::weak_ptr<GameObject>>> mListeners;
+    bool mRecording = false;
+    std::vector<std::string> mRecorded;  // the messages that were delivered, in the order they arrived
 };
 
 }  // namespace CMPUT350
