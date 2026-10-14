@@ -3,6 +3,7 @@
 #include "DrawContext.h"
 #include "GraphicsObject.h"
 #include "CollisionObject.h"
+#include "CollisionDetection.h"
 
 /// @brief
 namespace CMPUT350 {
@@ -48,15 +49,8 @@ inline void GameEngine::PollWindow() {
 }
 
 
-// True when two axis-aligned boxes share area, so boxes that only touch at an edge are not overlapping.
-// Four questions, all must be yes: does a start left of where b ends, does b start left of where a ends; both true means they interleave horizontally. Same for y. Interleave on both axes = overlapping areas.
-static bool Overlaps(const Rect& a, const Rect& b) {
-    return a.topLeft.x < b.topLeft.x + b.width &&
-           b.topLeft.x < a.topLeft.x + a.width &&
-           a.topLeft.y < b.topLeft.y + b.height &&
-           b.topLeft.y < a.topLeft.y + a.height;
-}
-
+// The broad phase (does the pair's bounding boxes even touch) now lives inside collision(), so this
+// just walks the candidate pairs and asks the real shape test.
 inline void GameEngine::ProcessCollisions() {
     // First figure out who can collide. Then check which pairs are actually touching.
 
@@ -83,11 +77,13 @@ inline void GameEngine::ProcessCollisions() {
         //   - don't collide an object with itself
         //   - don't check the same pair twice
         for (size_t j = i + 1; j < colliders.size(); j++) {
-            // Being CollisionObjects only means they CAN collide. Overlaps answers if their bounding boxes actually touching or overlapping
-            if (Overlaps(colliders[i]->GetBounds(), colliders[j]->GetBounds())) {
+            // Being CollisionObjects only means they CAN collide. collision() answers whether they actually
+            // do - bounds first, then each pair of shapes - and hands back the point where they met.
+            CMPUT350::Point2D collisionPoint;
+            if (collision(*colliders[i], *colliders[j], collisionPoint)) {
                 // If they are overlapping, tell BOTH objects about the same collision; The pair itself is checked only once, but each participant gets its own notification.
-                colliders[i]->CollisionEnter(colliders[j]);
-                colliders[j]->CollisionEnter(colliders[i]);
+                colliders[i]->CollisionEnter(colliders[j], collisionPoint);
+                colliders[j]->CollisionEnter(colliders[i], collisionPoint);
             }
         }
     }
