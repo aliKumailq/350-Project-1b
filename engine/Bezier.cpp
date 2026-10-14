@@ -54,9 +54,18 @@ CMPUT350::Point2D Bezier::GetPoint(const std::vector<CMPUT350::Point2D> &pts, co
     const int max_t = int((pts.size() - 1) / BEZIER_DIMENSION);
     assert(t >= 0 && t <= max_t);
 
-    const size_t line_segment = t;
+    // t walks the chain: floor(t) picks the curve, the fraction says how far along it. At t == max_t
+    // that index points one curve past the end, whose control points do not exist, so pin it to the
+    // end of the last real curve instead -- which is the spline's final point.
+    size_t line_segment = size_t(t);
+    float local_t = t - float(int(t));
+    if (line_segment >= size_t(max_t)) {
+        line_segment = size_t(max_t - 1);
+        local_t = 1.0f;
+    }
+
     const size_t line_segment_starting_index = line_segment * BEZIER_DIMENSION;
-    return GetBezierPoint<BEZIER_DIMENSION>(pts, line_segment_starting_index, t - int(t));
+    return GetBezierPoint<BEZIER_DIMENSION>(pts, line_segment_starting_index, local_t);
 
 }
 
@@ -65,9 +74,17 @@ CMPUT350::Point2D Bezier::GetSlope(const std::vector<CMPUT350::Point2D> &pts, co
     const int max_t = int((pts.size() - 1) / BEZIER_DIMENSION);
     assert(t >= 0 && t <= max_t);
 
-    const size_t line_segment = t;
+    // Same walk as GetPoint, with the same clamp at the far end so the final slope does not read past
+    // the last curve either.
+    size_t line_segment = size_t(t);
+    float local_t = t - float(int(t));
+    if (line_segment >= size_t(max_t)) {
+        line_segment = size_t(max_t - 1);
+        local_t = 1.0f;
+    }
+
     const size_t line_segment_starting_index = line_segment * BEZIER_DIMENSION;
-    return GetBezierPoint_d<BEZIER_DIMENSION>(pts, line_segment_starting_index, t - int(t));
+    return GetBezierPoint_d<BEZIER_DIMENSION>(pts, line_segment_starting_index, local_t);
     
 
 }
