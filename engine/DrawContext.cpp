@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include <SFML/Graphics.hpp>
+#include <SFML/System/Angle.hpp>
 
 static inline sf::Vector2f GetSfVec(const CMPUT350::Point2D& pnt) {
     return sf::Vector2f(pnt.x, pnt.y);
@@ -22,15 +23,15 @@ DrawContext::DrawContext(std::shared_ptr<sf::RenderWindow> window, std::shared_p
 
 inline sf::Text DrawContext::GetSfText(const std::string& text, int pixelSize, Point2D p,
                                        RGBColor c) {
+    
     sf::Text my_text(*mFont, text, pixelSize);
     my_text.setFillColor(sf::Color(c.r, c.g, c.b));
-    my_text.setPosition(sf::Vector2f(p.x, p.y));
+    my_text.setPosition(GetSfVec(Transform(p)));
     return my_text;
 }
 
 void DrawContext::DrawCenteredText(const std::string& text, int pixelSize,Point2D p ,RGBColor c) {
-    p += mOffset;
-    auto my_text = GetSfText(text, pixelSize, p, c);
+    auto my_text = GetSfText(text, pixelSize, Transform(p), c);
     auto text_bounding_box = my_text.getLocalBounds();
 
     my_text.setOrigin(text_bounding_box.position + (text_bounding_box.size / 2.0f));
@@ -44,16 +45,15 @@ void DrawContext::DrawCenteredText(const std::string& text, int pixelSize,Point2
 }
 
 void DrawContext::DrawText(const std::string& text, int pixelSize, Point2D p, RGBColor c) {
-    mWindow->draw(GetSfText(text, pixelSize, p + mOffset, c));
+    mWindow->draw(GetSfText(text, pixelSize, Transform(p) , c));
 }
 
 void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
     sf::CircleShape circle(
         radius);  // FIXME: Should probably throw some exception if the radius is 0.
 
-    p += mOffset;
 
-    circle.setPosition(sf::Vector2f(p.x, p.y));
+    circle.setPosition(GetSfVec(Transform(p)));
     circle.setFillColor(sf::Color(c.r, c.g, c.b));
 
     auto localBounds = circle.getLocalBounds();
@@ -69,10 +69,13 @@ void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
 void DrawContext::DrawRect(Rect r, RGBColor c) {
     sf::RectangleShape rectangle;
 
-    rectangle.setPosition({r.topLeft.x, r.topLeft.y});
+
+    rectangle.setPosition(GetSfVec(Transform(r.topLeft)));
     rectangle.setSize(sf::Vector2f(r.width, r.height));
     rectangle.setFillColor(sf::Color(c.r, c.g, c.b));
 
+    rectangle.rotate(sf::radians(mRotation));
+    
     mWindow->draw(rectangle);
 }
 
@@ -94,6 +97,12 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
     // To get the vector pointing SIDEWAYS across the line, rotate that direction 90 degrees: (dx,
     // dy) -> (-dy, dx) The old code used (dx, -dy), which only mirrored the direction instead of
     // making it perpendicular. That produced a diamond shape instead of a proper rectangle.
+    from = Transform(from) ;
+    to = Transform(to);
+
+    
+
+
     Point2D end(-(to.y - from.y), (to.x - from.x));
     end.Normalize();
     end =
@@ -114,7 +123,7 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
     line.setPoint(3, GetSfVec(end * -1));
 
     line.setFillColor(GetSfColor(c));
-    line.setPosition(GetSfVec(mOffset + from));
+    line.setPosition(GetSfVec(from));
 
     mWindow->draw(line);
 }
