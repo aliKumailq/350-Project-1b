@@ -28,6 +28,22 @@ inline void GameEngine::PollWindow(GameContext* context) {
 		else if (event->is<sf::Event::Resized>())
 		{
 		}
+		else if (const auto* keyDown = event->getIf<sf::Event::KeyPressed>())
+		{
+			// The scancode is the physical key, so it does not move when the layout changes; that is what the Key:: constants describe
+			int scancode = static_cast<int>(keyDown->scancode);
+			// Only fire if some object asked to hear this key go down
+			if (mKeyDownNotifications.find(scancode) != mKeyDownNotifications.end()) {
+				mNotificationManager.Notify(mKeyDownNotifications[scancode]);
+			}
+		}
+		else if (const auto* keyUp = event->getIf<sf::Event::KeyReleased>())
+		{
+			int scancode = static_cast<int>(keyUp->scancode);
+			if (mKeyUpNotifications.find(scancode) != mKeyUpNotifications.end()) {
+				mNotificationManager.Notify(mKeyUpNotifications[scancode]);
+			}
+		}
 		else if (const auto* keyPressed = event->getIf<sf::Event::TextEntered>())
 		{
 			// we only handle low-order ASCII, so the unicode value can come down to a char
