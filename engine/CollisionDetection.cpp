@@ -79,7 +79,7 @@ static inline bool line_circle_collision(const ShapeTransfer& line_, const Shape
 
     pnt = closest_pnt - of;
 
-    pnt = line__.transformation.transform(pnt, true);
+    //pnt = line__.transformation.transform(pnt, true);
 
     return true;
 

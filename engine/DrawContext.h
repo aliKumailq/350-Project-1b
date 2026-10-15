@@ -42,12 +42,13 @@ public:
     void SetContextOffset(const Point2D& p);
 	void SetContextRotation(float rotation);
 
+    Point2D Transform(const Point2D& p);
+
 private:
     inline sf::Text GetSfText(const std::string &text, int pixelSize, Point2D p, RGBColor c);
 
     friend class GameEngine;
 
-	Point2D Transform(const Point2D& p);
 	Point2D ReverseTransform(const Point2D& p);
 	Rect Transform(Rect r); // Rotates rectangle and computes new bounding box after
 

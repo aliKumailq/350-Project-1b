@@ -1,6 +1,9 @@
-#pragma once
+#ifndef MATH_HELFERS
+
 #include "MathUtil.h"
 #include "CollisionObject.h"
+
+
 
 namespace {
 namespace RectHelpers {
@@ -8,7 +11,7 @@ namespace RectHelpers {
     struct RectangleVerticies {
 
         RectangleVerticies(const Rect& rect) : tl(rect.topLeft), tr(rect.topLeft.x + rect.width, rect.topLeft.y),
-        bl(rect.topLeft.x, rect.topLeft.y - rect.height), br(rect.topLeft.x + rect.width, rect.topLeft.y - rect.height) {}
+        bl(rect.topLeft.x, rect.topLeft.y + rect.height), br(rect.topLeft.x + rect.width, rect.topLeft.y + rect.height) {}
 
         RectangleVerticies() {}
 
@@ -39,8 +42,8 @@ namespace RectHelpers {
         struct RectangleVerticies vert;
         vert.tl = rect.topLeft;
         vert.tr = Point2D(rect.topLeft.x + rect.width, rect.topLeft.y);
-        vert.bl = Point2D(rect.topLeft.x, rect.topLeft.y - rect.height);
-        vert.br = Point2D(rect.topLeft.x + rect.width, rect.topLeft.y - rect.height);
+        vert.bl = Point2D(rect.topLeft.x, rect.topLeft.y + rect.height);
+        vert.br = Point2D(rect.topLeft.x + rect.width, rect.topLeft.y + rect.height);
         return vert;
         
 
@@ -49,8 +52,8 @@ namespace RectHelpers {
 
 
     static inline void TransformVerticies(RectangleVerticies& verticies, const Point2D& offset, const double& rotation, bool reverse = false) {
-        auto cos_d = cos(rotation);
-        auto sin_d = sin(rotation);
+        auto cos_d = cosf(rotation);
+        auto sin_d = sinf(rotation);
         auto transform = [&cos_d, &sin_d, &offset, &reverse](Point2D& p) -> void {
             auto x = reverse ? (p.x * cos_d + p.y * sin_d) : (p.x * cos_d - p.y * sin_d);
             auto y = reverse ? (p.y * cos_d - p.x * sin_d) : (p.x * sin_d + p.y * cos_d);
@@ -90,3 +93,7 @@ namespace RectHelpers {
 }
 
 }
+
+
+
+#endif
