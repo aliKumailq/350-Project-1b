@@ -1,6 +1,6 @@
 #include "CollisionDetection.h"
-
 #include "CollisionObject.h"
+#include "RectHelpers.h"
 #include "MathUtil.h"
 
 
@@ -10,6 +10,8 @@ static bool Overlaps(const CMPUT350::Rect& a, const CMPUT350::Rect& b) {
            a.topLeft.y < b.topLeft.y + b.height &&
            b.topLeft.y < a.topLeft.y + a.height;
 }
+
+
 
 
 inline bool line_circle_collision(const CMPUT350::Line& line, const CMPUT350::Circle& circle, CMPUT350::Point2D& pnt) {
@@ -33,7 +35,7 @@ inline bool line_circle_collision(const CMPUT350::Line& line, const CMPUT350::Ci
 }
 
 
-inline bool line_rect_collision(const CMPUT350::Line& line, const CMPUT350::Rect& rect, CMPUT350::Point2D& pnt) {
+inline bool line_rect_collision(const CMPUT350::Line& line, const ShapeTra, CMPUT350::Point2D& pnt) {
 
     const auto& x = rect.topLeft.x;
     const auto& y = rect.topLeft.y;
@@ -229,9 +231,9 @@ bool rect_collides(const CMPUT350::Rect& rect, const CMPUT350::CollisionObject& 
 }
 
 
-inline bool collision(const CMPUT350::CollisionObject& obj1, const CMPUT350::CollisionObject& obj2, CMPUT350::Point2D& pnt) {
+inline bool collision( CMPUT350::CollisionObject& obj1,  CMPUT350::CollisionObject& obj2, CMPUT350::Point2D& pnt) {
 
-    if (!(Overlaps(obj1.GetBounds(), obj2.GetBounds()))) return false;
+    if (!(BoundingBoxCollision(obj1, obj2))) return false;
 
     for (const auto& obj1_shape : obj1.GetShapes()) {
         

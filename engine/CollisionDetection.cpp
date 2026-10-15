@@ -1,18 +1,67 @@
 #include "CollisionDetection.h"
+#include "CollisionObject.h"
+#include "RectHelpers.h"
 
 
-static inline bool Overlaps(const CMPUT350::Rect& a, const CMPUT350::Rect& b) {
-    return a.topLeft.x < b.topLeft.x + b.width &&
-           b.topLeft.x < a.topLeft.x + a.width &&
-           a.topLeft.y < b.topLeft.y + b.height &&
-           b.topLeft.y < a.topLeft.y + a.height;
+namespace {
+    using namespace CMPUT350;
+    struct Transformation {
+
+        Transformation(const Point2D& pnt, const float& r) : offset(pnt), rotation(r), cos(cosf(rotation)), sin(sinf(rotation)) {}
+
+        Point2D transform(const Point2D& p_, bool reverse = false) const  {
+            auto p = p_ - (reverse ? offset : 0);
+            const float x = reverse ? (p.x * cos + p.y * sin) : (p.x * cos - p.y * sin);
+            const float y = reverse ? (p.y * cos - p.x * sin) : (p.x * sin + p.y * cos);
+            return Point2D(x, y) + (reverse ? 0 : offset);
+        }
+
+        CMPUT350::Point2D offset;
+        float rotation;
+        float cos;
+        float sin;
+
+    };
+
+    struct ShapeTransfer{
+        
+        ShapeTransfer(const Point2D& pnt, const float& r, const Shape& shape) : transformation(pnt, r), shape(shape) {}
+
+        Transformation transformation;
+        Shape shape;
+
+    };
+
+    inline void ShapeTransferCircle(ShapeTransfer& circle) {
+        assert(circle.shape.t == CMPUT350::ShapeType::kCircle);
+        circle.shape.shape.circle.center = circle.transformation.transform(circle.shape.shape.circle.center);
+    }
+
+    inline void ShapeTransferLine(ShapeTransfer& line) {
+        assert(line.shape.t == CMPUT350::ShapeType::kLine);
+        line.shape.shape.line.p1 = line.transformation.transform(line.shape.shape.line.p1);
+        line.shape.shape.line.p2 = line.transformation.transform(line.shape.shape.line.p2);
+        return;
+    }
 }
 
 
-static inline bool line_circle_collision(const CMPUT350::Line& line, const CMPUT350::Circle& circle, CMPUT350::Point2D& pnt) {
+static inline bool line_circle_collision(const ShapeTransfer& line_, const ShapeTransfer& circle_, CMPUT350::Point2D& pnt) {
+    auto line__ = line_;
+    auto circle__ = circle_;
+
+    ShapeTransferCircle(circle__);
+    ShapeTransferLine(line__);
+
+
+    auto& line = line__.shape.shape.line;
+    auto& circle = circle__.shape.shape.circle;
+
+
+
 
     auto closest_pnt = line.ClosestPoint(circle.center);
-    auto distance_sqrd = closest_pnt.DistanceSquared(circle.radius);
+    auto distance_sqrd = closest_pnt.DistanceSquared(circle.center);
 
     if (distance_sqrd > SquareFloat(circle.radius)) return false;
     // if the square of the distance between closest point and radius is larger than the radius squared, then we DO NOT have a collision
@@ -22,7 +71,15 @@ static inline bool line_circle_collision(const CMPUT350::Line& line, const CMPUT
 
     auto distance_p1_p = line.p1.Distance(closest_pnt);
 
-    pnt = closest_pnt + (((line.p1 - closest_pnt) * (1/distance_p1_p)) * sqrt(q_sqr)); 
+    auto dir = (line.p2 - line.p1) * (1.0f / line.p1.Distance(line.p2));
+    auto of = sqrt(q_sqr) * dir;
+
+
+
+
+    pnt = closest_pnt - of;
+
+    pnt = line__.transformation.transform(pnt, true);
 
     return true;
 
@@ -30,70 +87,54 @@ static inline bool line_circle_collision(const CMPUT350::Line& line, const CMPUT
 }
 
 
-static inline bool line_rect_collision(const CMPUT350::Line& line, const CMPUT350::Rect& rect, CMPUT350::Point2D& pnt) {
+static inline bool line_rect_collision(const ShapeTransfer& line_, const ShapeTransfer& Rect ,CMPUT350::Point2D& pnt) {
+    assert(Rect.shape.t == CMPUT350::ShapeType::kRect);
 
-    const auto& x = rect.topLeft.x;
-    const auto& y = rect.topLeft.y;
+    auto line__ = line_;
+    ShapeTransferLine(line__);
+    auto& line = line__.shape.shape.line;
 
-    const auto& width = rect.width;
-    const auto& height = rect.height;
+    auto verticies = RectHelpers::RectangleVerticies(Rect.shape.shape.rect);
+    RectHelpers::TransformVerticies(verticies, Rect.transformation.offset, Rect.transformation.rotation);
 
-    // corners of the rectangle
-    const auto topRight = CMPUT350::Point2D(x + width, y);
-    const auto& topLeft = rect.topLeft;
-    const auto bottomLeft = CMPUT350::Point2D(x, y - height);
-    const auto bottomRight = CMPUT350::Point2D(x + width, y - height);
+    auto edges = RectHelpers::GetRectEdges(verticies);
+    if (line.Crosses(edges.top,pnt)) return true;
+    if (line.Crosses(edges.bottom, pnt)) return true;
+    if (line.Crosses(edges.left, pnt)) return true;
+    if (line.Crosses(edges.right, pnt)) return true;
 
-
-    
-    const CMPUT350::Line top_edge(topLeft, topRight);
-    if (line.Crosses(top_edge, pnt)) return true;
-    
-
-    
-    CMPUT350::Line bottom_edge(bottomLeft, bottomRight);
-    if (line.Crosses(bottom_edge, pnt)) return true;
-
-    
-
-    
-    CMPUT350::Line left_edge(topLeft, bottomLeft);
-    if (line.Crosses(left_edge, pnt)) return true;
-    
-    
-    CMPUT350::Line right_edge(topRight, bottomRight);
-    if (line.Crosses(right_edge, pnt)) return true;
-     
     return false;
 
 
 }
 
-static inline bool line_collides(const CMPUT350::Line& line,CMPUT350::Shape shape ,const CMPUT350::CollisionObject& obj, CMPUT350::Point2D& pnt) {
-    const auto obj_offset = obj.GetLocation(); // assuming 'line''s offset has already been applied
+static inline bool line_collides(const ShapeTransfer& shape1, const ShapeTransfer& shape2, CMPUT350::Point2D& pnt) {
+    assert(shape1.shape.t == CMPUT350::ShapeType::kLine);
 
-        switch(shape.t) {
 
+
+
+        switch(shape2.shape.t) {
             case CMPUT350::ShapeType::kLine: {
-                CMPUT350::Line obj_line = shape.shape.line;
-                obj_line.p1 += obj_offset;
-                obj_line.p2 += obj_offset;
-                if (line.Crosses(obj_line, pnt)) return true;
+                auto line1 = shape1;
+                ShapeTransferLine(line1);
+
+                auto line2 = shape2;
+                ShapeTransferLine(line2);
+
+
+                if (line1.shape.shape.line.Crosses(line2.shape.shape.line, pnt)) return true;
 
             } break;
 
             case CMPUT350::ShapeType::kCircle: {
-                CMPUT350::Circle obj_circle = shape.shape.circle;
-                obj_circle.center += obj_offset;
-                if(line_circle_collision(line,obj_circle, pnt)) return true;
+                if(line_circle_collision(shape1,shape2, pnt)) return true;
 
             } break;
 
             case CMPUT350::ShapeType::kRect: {
 
-                CMPUT350::Rect obj_rect = shape.shape.rect;
-                obj_rect.topLeft += obj_offset;
-                if(line_rect_collision(line, obj_rect, pnt)) return true;
+                if(line_rect_collision(shape1, shape2,pnt)) return true;
 
 
             } break;
@@ -104,38 +145,22 @@ static inline bool line_collides(const CMPUT350::Line& line,CMPUT350::Shape shap
 
 }
 
-static inline bool circle_rect_collision(const CMPUT350::Circle& circle, const CMPUT350::Rect& rect, CMPUT350::Point2D& pnt) {
-    const auto& x = rect.topLeft.x;
-    const auto& y = rect.topLeft.y;
+static inline bool circle_rect_collision(const ShapeTransfer& circle, const ShapeTransfer& rect ,CMPUT350::Point2D& pnt) {
+    assert(rect.shape.t == CMPUT350::ShapeType::kRect);
 
-    const auto& width = rect.width;
-    const auto& height = rect.height;
+    auto verticies = RectHelpers::RectangleVerticies(rect.shape.shape.rect);
+    auto edges = RectHelpers::GetRectEdges(verticies);
 
-    // corners of the rectangle
-    const auto topRight = CMPUT350::Point2D(x + width, y);
-    const auto& topLeft = rect.topLeft;
-    const auto bottomLeft = CMPUT350::Point2D(x, y - height);
-    const auto bottomRight = CMPUT350::Point2D(x + width, y - height);
-
+    auto top = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.top};
+    auto bottom = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.bottom};
+    auto right = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.right};
+    auto left = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.left};
 
     
-    const CMPUT350::Line top_edge(topLeft, topRight);
-    if (line_circle_collision(top_edge, circle, pnt)) return true;
-    
-
-    
-    CMPUT350::Line bottom_edge(bottomLeft, bottomRight);
-    if (line_circle_collision(bottom_edge, circle, pnt)) return true;
-
-    
-
-    
-    CMPUT350::Line left_edge(topLeft, bottomLeft);
-    if (line_circle_collision(left_edge, circle, pnt)) return true;
-    
-    
-    CMPUT350::Line right_edge(topRight, bottomRight);
-    if (line_circle_collision(right_edge, circle, pnt)) return true;
+    if (line_circle_collision(top,circle,pnt)) return true;
+    if (line_circle_collision(bottom,circle, pnt)) return true;
+    if (line_circle_collision(left, circle,pnt)) return true;
+    if (line_circle_collision(right, circle,pnt)) return true;
      
     return false;
 
@@ -147,32 +172,30 @@ static inline bool circle_rect_collision(const CMPUT350::Circle& circle, const C
 
 
 
-static inline bool circle_collides( const CMPUT350::Circle& circle, const CMPUT350::Shape& shape,  CMPUT350::CollisionObject& obj, CMPUT350::Point2D& pnt) {
+static inline bool circle_collides( const ShapeTransfer&circle, const ShapeTransfer& shape, CMPUT350::Point2D& pnt) {
 
-    const auto obj_offset = obj.GetLocation(); // assuming 'line''s offset has already been applied
 
-        switch(shape.t) {
+        switch(shape.shape.t) {
 
             case CMPUT350::ShapeType::kLine: {
-                CMPUT350::Line obj_line = shape.shape.line;
-                obj_line.p1 += obj_offset;
-                obj_line.p2 += obj_offset;
-                if(line_circle_collision(obj_line, circle, pnt)) return true;;
+
+                if(line_circle_collision(shape, circle, pnt)) return true;;
 
             } break;
 
             case CMPUT350::ShapeType::kCircle: {
-                CMPUT350::Circle obj_circle = shape.shape.circle;
-                obj_circle.center += obj_offset;
-                if (!(circle.center.DistanceSquared(obj_circle.center) > SquareFloat(circle.radius + obj_circle.radius))) return true;
+                auto circle2 = shape; // punch me in the face
+                auto circle1 = circle;
+                ShapeTransferCircle(circle1);
+                ShapeTransferCircle(circle2);
+
+                if (!(circle1.shape.shape.circle.center.DistanceSquared(circle2.shape.shape.circle.center) > SquareFloat(circle.shape.shape.circle.radius + circle2.shape.shape.circle.radius))) return true;
 
             } break;
 
             case CMPUT350::ShapeType::kRect: {
 
-                CMPUT350::Rect obj_rect = shape.shape.rect;
-                obj_rect.topLeft += obj_offset;
-                if(circle_rect_collision(circle, obj_rect, pnt)) return true;
+                if(circle_rect_collision(circle, shape, pnt)) return true;
 
 
             } break;
@@ -186,32 +209,27 @@ static inline bool circle_collides( const CMPUT350::Circle& circle, const CMPUT3
 }
 
 
-static inline bool rect_collides(const CMPUT350::Rect& rect, CMPUT350::Shape shape ,CMPUT350::CollisionObject& obj, CMPUT350::Point2D& pnt) {
+static inline bool rect_collides(const ShapeTransfer&rect, const ShapeTransfer& shape , CMPUT350::Point2D& pnt) {
+    
 
-    const auto obj_offset = obj.GetLocation(); // assuming 'line''s offset has already been applied
-
-        switch(shape.t) {
+        switch(shape.shape.t) {
 
             case CMPUT350::ShapeType::kLine: {
-                CMPUT350::Line obj_line = shape.shape.line;
-                obj_line.p1 += obj_offset;
-                obj_line.p2 += obj_offset;
-                if (line_rect_collision(obj_line, rect, pnt)) return true;;
+
+                if (line_rect_collision(shape, rect,pnt)) return true;
 
             } break;
 
             case CMPUT350::ShapeType::kCircle: {
-                CMPUT350::Circle obj_circle = shape.shape.circle;
-                obj_circle.center += obj_offset;
-                if(circle_rect_collision(obj_circle, rect, pnt)) return true;
+                if(circle_rect_collision(shape, rect ,pnt)) return true;
 
             } break;
 
             case CMPUT350::ShapeType::kRect: {
 
-                CMPUT350::Rect obj_rect = shape.shape.rect;
-                obj_rect.topLeft += obj_offset;
-                if (Overlaps(rect, obj_rect)) return true;
+                if (RectangleCollision(rect.shape.shape.rect, shape.shape.shape.rect, 
+                        rect.transformation.rotation, shape.transformation.rotation, 
+                    rect.transformation.offset, shape.transformation.offset)) return true;
 
 
             } break;
@@ -220,40 +238,44 @@ static inline bool rect_collides(const CMPUT350::Rect& rect, CMPUT350::Shape sha
     return false;
 
 }
+
+    
+
+
 
 
 bool collision(CMPUT350::CollisionObject& obj1, CMPUT350::CollisionObject& obj2, CMPUT350::Point2D& pnt) {
 
-    if (!(Overlaps(obj1.GetBounds(), obj2.GetBounds()))) return false;
+    //if (!(BoundingBoxCollision(obj1, obj2))) return false;
+
+
 
     for ( auto& obj1_shape : obj1.GetShapes()) {
+        ShapeTransfer shape_trans(obj1.GetLocation(), obj1.GetRotation(), obj1_shape);
+
         for (auto& obj2_shape : obj2.GetShapes()) {
+            ShapeTransfer shape_trans_2(obj2.GetLocation(), obj2.GetRotation(), obj2_shape);
+
+        switch(shape_trans.shape.t) {
+            case CMPUT350::ShapeType::kLine:
+             if (line_collides(shape_trans, shape_trans_2, pnt)) return true;
+             break;
+            case CMPUT350::ShapeType::kCircle: 
+            if (circle_collides(shape_trans, shape_trans_2, pnt)) return true;
+            break;
+            case CMPUT350::ShapeType::kRect: 
+            if (rect_collides(shape_trans,shape_trans_2, pnt)) return true;
+            break;
         
-        switch(obj1_shape.t) {
-            case CMPUT350::ShapeType::kLine: {
-                if(line_collides(obj1_shape.shape.line, obj2_shape,obj2, pnt)) return true;
-            } break;
-
-            case CMPUT350::ShapeType::kCircle: {
-                if(circle_collides(obj1_shape.shape.circle, obj2_shape, obj2, pnt)) {}
-                //if (circle_collides(obj1_shape.shape.circle,obj2_shape ,obj2 ,pnt)) return true;
-            } break;
-
-            case CMPUT350::ShapeType::kRect: {
-                if (rect_collides(obj1_shape.shape.rect, obj2_shape,obj2, pnt)) return true;
-
-            } break;
-        }
     }
 }
 
-    return false;
 
 }
 
-int find() {
-    return 0;
+return false;
 }
+
 
 
 

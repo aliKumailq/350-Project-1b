@@ -69,7 +69,7 @@ const CMPUT350::Rect& Bullet::GetBounds()  {
 }
 
 CMPUT350::Point2D Bullet::GetLocation() const {
-    return CMPUT350::Point2D(0,0);
+    return mLocation;
 }
 
 float Bullet::GetRotation() const {

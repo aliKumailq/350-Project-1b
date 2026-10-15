@@ -124,7 +124,7 @@ const CMPUT350::Rect& Player::GetBounds()
 
 
 CMPUT350::Point2D Player::GetLocation() const {
-    return CMPUT350::Point2D(0,0);
+    return mLocation;
 }
 
 float Player::GetRotation() const {
