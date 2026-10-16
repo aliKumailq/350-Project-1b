@@ -20,7 +20,7 @@ GameEngine::GameEngine(unsigned int width, unsigned int height, const std::strin
     	}
 }
 
-inline void GameEngine::PollWindow(GameContext* context) {
+inline void GameEngine::PollWindow() {
 	while (const std::optional event = mWindow->pollEvent())
 	{
 		if (event->is<sf::Event::Closed>())
@@ -30,27 +30,28 @@ inline void GameEngine::PollWindow(GameContext* context) {
 		else if (event->is<sf::Event::Resized>())
 		{
 		}
-		else if (const auto* keyPressed = event->getIf<sf::Event::TextEntered>())
+		else if (const auto* keyDown = event->getIf<sf::Event::KeyPressed>())
 		{
-			// we only handle low-order ASCII, so the unicode value can come down to a char
-			char key = static_cast<char>(keyPressed->unicode);
-
-			// every object hears every key press, and decides for itself whether it cares
-			for (auto& obj : mGameObjects) obj->HandleKeyEvent(context, key);
+			// The scancode is the physical key, so it does not move when the layout changes; that is what the Key:: constants describe
+			int scancode = static_cast<int>(keyDown->scancode);
+			// Only fire if some object asked to hear this key go down
+			if (mKeyDownNotifications.find(scancode) != mKeyDownNotifications.end()) {
+				mNotificationManager.Notify(mKeyDownNotifications[scancode]);
+			}
+		}
+		else if (const auto* keyUp = event->getIf<sf::Event::KeyReleased>())
+		{
+			int scancode = static_cast<int>(keyUp->scancode);
+			if (mKeyUpNotifications.find(scancode) != mKeyUpNotifications.end()) {
+				mNotificationManager.Notify(mKeyUpNotifications[scancode]);
+			}
 		}
 	}
 }
 
 
-// True when two axis-aligned boxes share area, so boxes that only touch at an edge are not overlapping.
-// Four questions, all must be yes: does a start left of where b ends, does b start left of where a ends; both true means they interleave horizontally. Same for y. Interleave on both axes = overlapping areas.
-static bool Overlaps(const Rect& a, const Rect& b) {
-    return a.topLeft.x < b.topLeft.x + b.width &&
-           b.topLeft.x < a.topLeft.x + a.width &&
-           a.topLeft.y < b.topLeft.y + b.height &&
-           b.topLeft.y < a.topLeft.y + a.height;
-}
-
+// The broad phase (does the pair's bounding boxes even touch) now lives inside collision(), so this
+// just walks the candidate pairs and asks the real shape test.
 inline void GameEngine::ProcessCollisions() {
     // First figure out who can collide. Then check which pairs are actually touching.
 
@@ -110,6 +111,20 @@ void GameEngine::AddGameObject(std::shared_ptr<GameObject> gameObject) {
     mLateGameObjects.push_back(gameObject);
 }
 
+void GameEngine::InstallKeyDownNotification(int scancode, const std::string &notification) {
+    mKeyDownNotifications[scancode] = notification;
+}
+
+void GameEngine::InstallKeyUpNotification(int scancode, const std::string &notification) {
+    mKeyUpNotifications[scancode] = notification;
+}
+
+// The engine owns the object list, so it is the one that can hand out iterators over it
+EngineView::const_iterator GameEngine::cbegin() const { return mGameObjects.cbegin(); }
+EngineView::const_iterator GameEngine::cend() const { return mGameObjects.cend(); }
+EngineView::const_iterator GameEngine::begin() const { return mGameObjects.begin(); }
+EngineView::const_iterator GameEngine::end() const { return mGameObjects.end(); }
+
 /**
  * @method Run
  * @arguments None
@@ -122,6 +137,11 @@ void GameEngine::Run() {
     ctx.mEngineView = this;
     DrawContext drawCtx = DrawContext(mWindow, mFont);
     ctx.ScreenContext = &drawCtx;
+    // A second context for UI: it is never handed an object's transform, so it draws in screen space
+    DrawContext guiCtx = DrawContext(mWindow, mFont);
+    ctx.GUIContext = &guiCtx;
+    ctx.mNotificationManager = &mNotificationManager;
+    ctx.currentFrame = 0;
 
     mWindow->setFramerateLimit(30); // Needed since physics are tied to the engine.
     // Not sure if this is supposed to be hardcoded or if the user sets it yet.
@@ -149,14 +169,15 @@ void GameEngine::Run() {
         mLateGameObjects.clear();
 
         // Initialize ONLY the objects we just added. firstNew marks where the old objects stop and the new objects begin.
-        for (size_t i = firstNew; i < mGameObjects.size(); i++) mGameObjects[i]->Initialize(&ctx);
+        for (size_t i = firstNew; i < mGameObjects.size(); i++) { ctx.CurrObject = mGameObjects[i]; mGameObjects[i]->Initialize(&ctx); }
 
         // 2. Process events
-        PollWindow(&ctx);
+        PollWindow();
         if (mCloseGame) return;
 
         // 3. Update game objects
-        for (auto& obj : mGameObjects) obj->Update(&ctx);
+        // Stamp the object being called so anything it creates can hold a weak reference back to it
+        for (auto& obj : mGameObjects) { ctx.CurrObject = obj; obj->Update(&ctx); }
 
         // 4. Process collision events
         ProcessCollisions();
@@ -188,6 +209,9 @@ void GameEngine::Run() {
 
         // Actually render to window
         mWindow->display();
+
+        // A global clock, so no object has to track frames on its own
+        ctx.currentFrame++;
     }
 }
 

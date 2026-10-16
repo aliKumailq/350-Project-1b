@@ -327,6 +327,28 @@ static std::ostream& operator<<(std::ostream& os, const Rect& r) {
     return os;
 }
 
+// The shapes a collision object reports; all in the object's local space
+enum class ShapeType {
+    kLine, kCircle, kRect
+};
+
+union ShapeUnion {
+    ShapeUnion(Line l) : line(l) {}
+    ShapeUnion(Circle c) : circle(c) {}
+    ShapeUnion(Rect r) : rect(r) {}
+    Line line;
+    Circle circle;
+    Rect rect; // Axis-aligned rectangle
+};
+
+struct Shape {
+    Shape(const Line &l) : shape(l), t(ShapeType::kLine) {}
+    Shape(const Circle &c) : shape(c), t(ShapeType::kCircle) {}
+    Shape(const Rect &r) : shape(r), t(ShapeType::kRect) {}
+    ShapeUnion shape;
+    ShapeType t;
+};
+
 }  // namespace CMPUT350
 
 #endif  // MATHUTIL_H

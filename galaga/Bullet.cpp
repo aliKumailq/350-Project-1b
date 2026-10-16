@@ -2,8 +2,10 @@
 #include "Enemy.h"
 #include "MathUtil.h"
 
-Bullet::Bullet(CMPUT350::Point2D location, CMPUT350::Point2D heading, bool player)
-    : mLocation(location), mPreviousLocation(location), mHeading(heading), mPlayer(player), mAlive(true), mShapes{CMPUT350::Rect(mPreviousLocation, mLocation)}
+Bullet::Bullet(CMPUT350::Point2D location, CMPUT350::Point2D heading, bool player,
+               std::weak_ptr<CMPUT350::GameObject> parent)
+    : mLocation(location), mPreviousLocation(location), mHeading(heading), mPlayer(player), mAlive(true),
+      mParent(parent), mCollisionPoint(0.0f, 0.0f), mHit(false)
 {
 }
 
@@ -18,6 +20,9 @@ void Bullet::Initialize(CMPUT350::GameContext* context)
 
 void Bullet::Update(CMPUT350::GameContext* context)
 {
+    // If whoever fired us is gone, we go too, so a dead ship never leaves a shot in flight
+    if (mParent.expired()) mAlive = false;
+
     // Save where you were, then move foreward
     mPreviousLocation = mLocation;
     mLocation += mHeading;
@@ -30,26 +35,45 @@ void Bullet::LateUpdate(CMPUT350::GameContext* context)
 {
 }
 
-bool Bullet::HandleKeyEvent(CMPUT350::GameContext* context, char key)
-{
-    return (false); // This expects a bool in return
-}
-
 void Bullet::RenderBackground(CMPUT350::GameContext* context)
 {
 }
 
 void Bullet::RenderForeground(CMPUT350::GameContext* context)
 {
-    // Draw the same span the collision box covers, so what you see is what can be hit
-    context->ScreenContext->DrawLine(mPreviousLocation, mLocation, 3.0f,
-                                     mPlayer ? CMPUT350::Colors::white : CMPUT350::Colors::red);
+    const CMPUT350::RGBColor colour = mPlayer ? CMPUT350::Colors::white : CMPUT350::Colors::red;
+
+    if (mHit)
+    {
+        // Once it has struck, the bullet is only a small mark at the impact point. The point is in world
+        // space, so subtract our own location to place it in the local frame the engine offsets for us.
+        context->ScreenContext->DrawCircle(mCollisionPoint - mLocation, 3.0f, colour);
+        return;
+    }
+
+    // Draw relative to the bullet's own location, which the engine has already applied as the offset.
+    // So the tail sits at (previous - now) and the nose at the origin; together they are the world span.
+    context->ScreenContext->DrawLine(mPreviousLocation - mLocation, CMPUT350::Point2D(0.0f, 0.0f), 3.0f, colour);
 }
 
 void Bullet::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj)
 {
     // Only an enemy stops a bullet. The player that fired it isn't one, so the spawn overlap is ignored.
     if (std::dynamic_pointer_cast<Enemy>(obj) != nullptr) mAlive = false;
+}
+
+void Bullet::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj,
+                            const CMPUT350::Point2D& collisionPoint)
+{
+    // The engine tells us where we struck. If several enemies are hit on the same frame, keep the point
+    // furthest down the screen (largest y), which is where the bullet would have got to last.
+    if (!mHit || collisionPoint.y > mCollisionPoint.y)
+    {
+        mCollisionPoint = collisionPoint;
+        mHit = true;
+    }
+
+    CollisionEnter(obj); // the same "did this stop us" test as the point-free version
 }
 
 void Bullet::Kill()
@@ -62,20 +86,26 @@ bool Bullet::IsAlive() const
     return mAlive;
 }
 
-const CMPUT350::Rect& Bullet::GetBounds()  {
+const std::vector<CMPUT350::Shape>& Bullet::GetShapes()
+{
+    // The bullet's location is its nose, so in local space the swept path runs from where it was (relative
+    // to where it is now) back to the origin. Offsetting by GetLocation turns it into the world segment.
+    mShapes.clear();
+    mShapes.push_back(CMPUT350::Shape(CMPUT350::Line(mPreviousLocation - mLocation, CMPUT350::Point2D(0.0f, 0.0f))));
+    return mShapes;
+}
+
+const CMPUT350::Rect& Bullet::GetBounds() const
+{
     // Box around last frame's position and this one, so a fast bullet still hits what it passed through
-    mShapes[0] = CMPUT350::Rect(mPreviousLocation, mLocation);
-    return mShapes[0].shape.rect;
+    mBounds = CMPUT350::Rect(mPreviousLocation, mLocation);
+    return mBounds;
 }
 
 CMPUT350::Point2D Bullet::GetLocation() const {
-    return mLocation;
+    return mLocation; // the nose, which is also the pivot: the bullet's shapes and drawing are relative to it
 }
 
 float Bullet::GetRotation() const {
     return 0;
-}
-
-const std::vector<CMPUT350::Shape> &Bullet::GetShapes()  {
-    return mShapes;
 }

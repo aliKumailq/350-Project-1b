@@ -31,7 +31,8 @@ inline sf::Text DrawContext::GetSfText(const std::string& text, int pixelSize, P
 }
 
 void DrawContext::DrawCenteredText(const std::string& text, int pixelSize,Point2D p ,RGBColor c) {
-    auto my_text = GetSfText(text, pixelSize, Transform(p), c);
+    // GetSfText is the one place that transforms a point, so the raw p goes in and is shifted once
+    auto my_text = GetSfText(text, pixelSize, p, c);
     auto text_bounding_box = my_text.getLocalBounds();
 
     my_text.setOrigin(text_bounding_box.position + (text_bounding_box.size / 2.0f));
@@ -45,7 +46,8 @@ void DrawContext::DrawCenteredText(const std::string& text, int pixelSize,Point2
 }
 
 void DrawContext::DrawText(const std::string& text, int pixelSize, Point2D p, RGBColor c) {
-    mWindow->draw(GetSfText(text, pixelSize, Transform(p) , c));
+    // Same as the centred draw: GetSfText does the transforming, so p is handed over untouched
+    mWindow->draw(GetSfText(text, pixelSize, p, c));
 }
 
 void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
@@ -69,13 +71,18 @@ void DrawContext::DrawCircle(Point2D p, float radius, RGBColor c) {
 void DrawContext::DrawRect(Rect r, RGBColor c) {
     sf::RectangleShape rectangle;
 
+    // The rect arrives in the object's local space. The spec says the location is the point rotations
+    // happen around, so instead of placing the top-left corner and spinning the shape about it, we put
+    // the shape's own origin on the rect's centre and rotate around that. The centre is then moved to
+    // the transformed centre, so an object whose box is centred on the origin pivots on its location.
+    const Point2D centre(r.topLeft.x + (r.width / 2.0f), r.topLeft.y + (r.height / 2.0f));
 
-    rectangle.setPosition(GetSfVec(Transform(r.topLeft)));
     rectangle.setSize(sf::Vector2f(r.width, r.height));
+    rectangle.setOrigin(sf::Vector2f(r.width / 2.0f, r.height / 2.0f));
+    rectangle.setPosition(GetSfVec(Transform(centre)));
+    rectangle.setRotation(sf::radians(mRotation));
     rectangle.setFillColor(sf::Color(c.r, c.g, c.b));
 
-    rectangle.rotate(sf::radians(mRotation));
-    
     mWindow->draw(rectangle);
 }
 
