@@ -92,7 +92,8 @@ inline void GameEngine::ProcessCollisions() {
                 
                 auto pnt_i = Helpers::TransformPoint(pnt,colliders[i]->GetLocation(), colliders[i]->GetRotation(), true);
                 auto pnt_j = Helpers::TransformPoint(pnt,colliders[j]->GetLocation(), colliders[j]->GetRotation(),true);
-
+                // Have to apply the reverse transformation relative to each collision object so they can act accordingly.
+                
                 colliders[i]->CollisionEnter(colliders[j], pnt_i);
                 colliders[j]->CollisionEnter(colliders[i], pnt_j);
 

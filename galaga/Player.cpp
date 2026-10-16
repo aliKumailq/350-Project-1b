@@ -173,7 +173,7 @@ const std::vector<CMPUT350::Shape>& Player::GetShapes()
     return mShapes; // local, so it is built once and handed back unchanged
 }
 
-const CMPUT350::Rect& Player::GetBounds() const
+const CMPUT350::Rect& Player::GetBounds() 
 {
     if (mDestroyed)
     {

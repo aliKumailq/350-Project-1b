@@ -21,5 +21,6 @@ bool ZakoEnemy::Attack(CMPUT350::GameContext*, const CMPUT350::Point2D& target)
 
 void ZakoEnemy::RenderForeground(CMPUT350::GameContext* context)
 {
+    context->ScreenContext->DrawRect(GetBounds(), CMPUT350::Colors::white);
     DrawBody(context, CMPUT350::Colors::green);
 }

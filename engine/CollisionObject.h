@@ -24,7 +24,7 @@ public:
     virtual const std::vector<Shape> &GetShapes() = 0;
 
     // A cheap world-space box around the object, used to skip shape tests between objects that are far apart
-    virtual const Rect &GetBounds() const = 0;
+    virtual const Rect &GetBounds() = 0;
 };
 
 

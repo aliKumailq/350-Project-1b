@@ -2,8 +2,11 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 
 #include "Bullet.h"
+#include "MathUtil.h"
+#include "Player.h"
 
 // The enemy's body is 40x40, so half of it is 20
 static constexpr float kHalfSize = 20.0f;
@@ -58,7 +61,7 @@ void Enemy::Update(CMPUT350::GameContext* context)
         mT += kPathStep;
         // Fire once, around the middle of the dive, so the shot lands while the ship is away from its slot
         if (!mFiredThisDive && mT >= 0.5f * mMaxT) { mFiredThisDive = true; Fire(context); }
-        if (mT >= mMaxT) { mT = mMaxT; mPhase = Phase::kReturning; }
+        if (mT >= mMaxT) {  mT = mMaxT; mPhase = Phase::kReturning; }
         PlaceOnCurve(mT);
         break;
 
@@ -117,10 +120,10 @@ void Enemy::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj
         mHealth--;
         if (mHealth <= 0) mAlive = false;
         return;
+    } else if (std::shared_ptr<Player> fellow_enemy = std::dynamic_pointer_cast<Player>(obj)) {
+        mAlive = false;
+        // "Enemies can only collide with the player and player bullets."
     }
-
-    // Anything that is not a bullet is the player, and flying into the player destroys the enemy
-    mAlive = false;
 }
 
 const std::vector<CMPUT350::Shape>& Enemy::GetShapes()
@@ -128,10 +131,11 @@ const std::vector<CMPUT350::Shape>& Enemy::GetShapes()
     return mShapes; // local, so it is built once and handed back unchanged
 }
 
-const CMPUT350::Rect& Enemy::GetBounds() const
+const CMPUT350::Rect& Enemy::GetBounds()
 {
     // Rebuilt from the centre, so the box follows the ship through its entry and dives
-    mBounds = CMPUT350::Rect(mLocation - CMPUT350::Point2D(kHalfSize, kHalfSize), 2.0f * kHalfSize, 2.0f * kHalfSize);
+    mBounds = CMPUT350::Rect(CMPUT350::Point2D(0,0) - CMPUT350::Point2D(kHalfSize, kHalfSize), 2.0f * kHalfSize, 2.0f * kHalfSize);
+    // Remember that all internal locations must be relative to the collision objects origin.
     return mBounds;
 }
 
