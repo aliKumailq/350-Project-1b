@@ -47,7 +47,7 @@ void Bullet::RenderForeground(CMPUT350::GameContext* context)
     {
         // Once it has struck, the bullet is only a small mark at the impact point. The point is in world
         // space, so subtract our own location to place it in the local frame the engine offsets for us.
-        context->ScreenContext->DrawCircle(mCollisionPoint, 5.0f, colour);
+        context->ScreenContext->DrawCircle(mCollisionPoint, 8.0f, colour);
         return;
     }
 
