@@ -1,4 +1,3 @@
-#include "DrawContext.h"
 #include "GameEngine.h"
 #include "Player.h"
 
@@ -38,7 +37,7 @@ public:
 		return mBounds;
 	}
 	
-	bool IsStatic() const  { return false; }
+	bool IsStatic() const { return false; }
 	
 	const std::vector<CMPUT350::Shape> &GetShapes() override
 	{
@@ -69,12 +68,8 @@ public:
 		else {
 			context->ScreenContext->DrawCircle({0, 0}, mRadius, CMPUT350::Colors::blue);
 		}
-		if (mHasCollisionPoint){
-			context->ScreenContext->SetContextRotation(0);
-			context->ScreenContext->SetContextOffset(CMPUT350::Point2D(0,0));
-
+		if (mHasCollisionPoint)
 			context->ScreenContext->DrawCircle(mCollisionPoint, 5, CMPUT350::Colors::yellow);
-		}
 	}
 private:
 	int mRadius;
@@ -119,7 +114,7 @@ public:
 		return mBounds;
 	}
 	
-	bool IsStatic() const  { return false; }
+	bool IsStatic() const { return false; }
 	
 	const std::vector<CMPUT350::Shape> &GetShapes() override
 	{
@@ -151,10 +146,8 @@ public:
 		else {
 			context->ScreenContext->DrawLine({0, 0}, mTo-mFrom, 2.0f, CMPUT350::Colors::blue);
 		}
-		if (mHasCollisionPoint){
+		if (mHasCollisionPoint)
 			context->ScreenContext->DrawCircle(mCollisionPoint, 3, CMPUT350::Colors::yellow);
-		}
-
 	}
 private:
 	int mRadius;
@@ -202,7 +195,7 @@ public:
 		return mBounds;
 	}
 	
-	bool IsStatic() const  { return false; }
+	bool IsStatic() const { return false; }
 	
 	const std::vector<CMPUT350::Shape> &GetShapes() override
 	{
@@ -226,7 +219,6 @@ public:
 	
 	void RenderForeground(CMPUT350::GameContext *context) override
 	{
-
 		if (mInCollision)
 		{
 			context->ScreenContext->DrawRect(CMPUT350::Rect({0, 0}, mTo-mFrom), CMPUT350::Colors::red);
@@ -234,9 +226,8 @@ public:
 		else {
 			context->ScreenContext->DrawRect(CMPUT350::Rect({0, 0}, mTo-mFrom), CMPUT350::Colors::blue);
 		}
-		if (mHasCollisionPoint);
-		context->ScreenContext->DrawCircle(mCollisionPoint, 3, CMPUT350::Colors::yellow);
-
+		if (mHasCollisionPoint)
+			context->ScreenContext->DrawCircle(mCollisionPoint, 3, CMPUT350::Colors::yellow);
 	}
 private:
 	int mRadius;
@@ -253,9 +244,6 @@ int main()
 	if (gUseCollisionDemo)
 	{
 		CMPUT350::GameEngine engine(512, 512, "Collision Demo");
-
-		
-		
 		engine.AddGameObject(std::make_shared<Ball>(CMPUT350::Point2D(100, 100), 25));
 		engine.AddGameObject(std::make_shared<Ball>(CMPUT350::Point2D(150, 100), 25));
 
@@ -273,25 +261,20 @@ int main()
 
 		engine.AddGameObject(std::make_shared<Rect>(CMPUT350::Point2D(256-25, 256-25), CMPUT350::Point2D(256+25, 256+25)));
 		engine.AddGameObject(std::make_shared<Rect>(CMPUT350::Point2D(200, 200), CMPUT350::Point2D(225, 225)));
-		
-		engine.AddGameObject(std::make_shared<Ball>(CMPUT350::Point2D(250, 400), 25));
-		engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(250, 450), CMPUT350::Point2D(260, 400)));
-		
 
-		//engine.AddGameObject(std::make_shared<Ball>(CMPUT350::Point2D(175, 400), 25));
-		//engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(175, 415), CMPUT350::Point2D(175, 440)));
-		
-		//engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(30, 30), CMPUT350::Point2D(50, 30)));
-		//engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(40, 30), CMPUT350::Point2D(60, 30)));
+		engine.AddGameObject(std::make_shared<Ball>(CMPUT350::Point2D(250, 400), 25));
+		engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(250, 435), CMPUT350::Point2D(250, 455)));
+
+		engine.AddGameObject(std::make_shared<Ball>(CMPUT350::Point2D(175, 400), 25));
+		engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(175, 415), CMPUT350::Point2D(175, 440)));
+
+		engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(30, 30), CMPUT350::Point2D(50, 30)));
+		engine.AddGameObject(std::make_shared<Line>(CMPUT350::Point2D(30, 30), CMPUT350::Point2D(50, 30)));
 
 		
 		engine.Run();
 	}
 	else {
-		CMPUT350::GameEngine engine(768, 1024, "Galaga");
-		//auto game = std::make_shared<Galaga>(768, 1024);
-		//engine.AddGameObject(game);
-		engine.Run();
 	}
     return 0;
 }

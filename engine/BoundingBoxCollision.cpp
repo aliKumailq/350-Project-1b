@@ -4,9 +4,8 @@
 #include "MathUtil.h"
 #include "CollisionObject.h"
 #include "CollisionDetection.h"
-#include "RectHelpers.h"
-using namespace RectHelpers;
-
+#include "Helpers.h"
+using namespace Helpers;
 
 
 

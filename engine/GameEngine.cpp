@@ -4,6 +4,7 @@
 #include "GraphicsObject.h"
 #include "CollisionObject.h"
 #include "CollisionDetection.h"
+#include "Helpers.h"
 
 /// @brief
 namespace CMPUT350 {
@@ -79,11 +80,22 @@ inline void GameEngine::ProcessCollisions() {
         for (size_t j = i + 1; j < colliders.size(); j++) {
             // Being CollisionObjects only means they CAN collide. Overlaps answers if their bounding boxes actually touching or overlapping
             CMPUT350::Point2D pnt;
+            bool lineInvolved = false;
             // collision(*colliders[i], *colliders[j], pnt)
-            if (collision(*colliders[i], *colliders[j], pnt)) {
+            if (collision(*colliders[i], *colliders[j], pnt, lineInvolved)) {
                 // If they are overlapping, tell BOTH objects about the same collision; The pair itself is checked only once, but each participant gets its own notification.
-                colliders[i]->CollisionEnter(colliders[j], pnt);
-                colliders[j]->CollisionEnter(colliders[i], pnt);
+                if(!lineInvolved) {
+                    colliders[i]->CollisionEnter(colliders[j]);
+                    colliders[j]->CollisionEnter(colliders[i]);
+                } else {
+                
+                auto pnt_i = Helpers::TransformPoint(pnt,colliders[i]->GetLocation(), colliders[i]->GetRotation(), true);
+                auto pnt_j = Helpers::TransformPoint(pnt,colliders[j]->GetLocation(), colliders[j]->GetRotation(),true);
+
+                colliders[i]->CollisionEnter(colliders[j], pnt_i);
+                colliders[j]->CollisionEnter(colliders[i], pnt_j);
+
+                }
             }
         }
     }
