@@ -115,6 +115,8 @@ void Player::RenderForeground(CMPUT350::GameContext* context)
     // A destroyed ship is not drawn; it is off the board until the Galaga class re-spawns it
     if (mDestroyed) return;
 
+    
+
     // Each shape is a fraction of the hitbox half-size, so the ship can never reach outside the box it collides with. They are drawn around the origin and the engine adds the ship's location, so the picture travels with it. Later calls paint over earlier ones, so this runs back to front: wings, then body, then cockpit.
     const float h = kHalfSize;
 
@@ -124,6 +126,8 @@ void Player::RenderForeground(CMPUT350::GameContext* context)
                                      CMPUT350::Colors::grey);
     context->ScreenContext->DrawCircle(CMPUT350::Point2D(0.0f, -0.4f * h), 0.3f * h,
                                        CMPUT350::Colors::cyan);
+    
+                                       
 }
 
 void Player::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj)
@@ -183,7 +187,7 @@ const CMPUT350::Rect& Player::GetBounds()
     }
 
     // The player moves, so the box is rebuilt from the current centre every time it is asked for
-    mBounds = CMPUT350::Rect(mLocation - CMPUT350::Point2D(kHalfSize, kHalfSize), 2 * kHalfSize, 2 * kHalfSize);
+    mBounds = CMPUT350::Rect(CMPUT350::Point2D(0,0) - CMPUT350::Point2D(kHalfSize, kHalfSize), 2 * kHalfSize, 2 * kHalfSize);
     return mBounds;
 }
 
