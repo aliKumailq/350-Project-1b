@@ -26,12 +26,12 @@ static inline bool line_circle_collision(const ShapeTransfer& line_, const Shape
         return p.DistanceSquared(circle.center) > SquareFloat(circle.radius);
     };
 
-    if (!too_far(distance_sqrd)) {
+    if (!too_far(distance_sqrd)) { // not crossing the circle.
         intersection = false;
         return false;
     }
 
-    if (!too_far(line.p1) && !too_far(line.p2)) {
+    if (!too_far(line.p1) && !too_far(line.p2)) { // whole line is inside the circle.
         intersection = false;
         return true;
     }
@@ -74,7 +74,7 @@ static inline bool line_circle_collision(const ShapeTransfer& line_, const Shape
     auto t2 = (-second_term + sqrt(dis)) / (2*first_term);
     auto valid = [](const double& t) {
         return !(t < 0 || t > 1);
-    };
+    }; // use the smallest (valid) t. Since a smaller t is closer to P1.
 
     auto point = [&line, &segment](const double& t) {
         return line.p1 + t * (segment);
@@ -104,6 +104,8 @@ static inline bool line_circle_collision(const ShapeTransfer& line_, const Shape
 
 
 static inline bool line_rect_collision(const ShapeTransfer& line_, const ShapeTransfer& Rect ,CMPUT350::Point2D& pnt,bool& intersection) {
+    // similar to the circle. Treat every edge like a line and then see if the line is inside of the rectangle itself
+
     assert(Rect.shape.t == CMPUT350::ShapeType::kRect);
 
     auto line__ = line_;
@@ -141,7 +143,7 @@ static inline bool line_rect_collision(const ShapeTransfer& line_, const ShapeTr
 
 static inline bool line_collides(const ShapeTransfer& shape1, const ShapeTransfer& shape2, CMPUT350::Point2D& pnt,bool& intersection) {
     assert(shape1.shape.t == CMPUT350::ShapeType::kLine);
-
+    // handles all cases for what kind of shape shape2 is. given that shape1 is a line.
 
 
 
@@ -151,7 +153,7 @@ static inline bool line_collides(const ShapeTransfer& shape1, const ShapeTransfe
                 ShapeTransferLine(line1);
 
                 auto line2 = shape2;
-                ShapeTransferLine(line2);
+                ShapeTransferLine(line2); // transform both lines to absolute coords and see if they cross
 
             
                 if (line1.shape.shape.line.Crosses(line2.shape.shape.line, pnt)) return true;
@@ -182,10 +184,11 @@ static inline bool circle_rect_collision(const ShapeTransfer& circle, const Shap
     auto verticies = Helpers::RectangleVerticies(rect.shape.shape.rect);
     const auto edges = Helpers::GetRectEdges(verticies);
 
+    // treating each edge like a line and seeing if the circle collides with them.
     auto top = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.top};
     auto bottom = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.bottom};
     auto right = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.right};
-    auto left = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.left};
+    auto left = ShapeTransfer{rect.transformation.offset, rect.transformation.rotation, edges.left}; 
 
     
     if (line_circle_collision(top,circle,pnt,intersection)) return !(intersection = false);
@@ -213,6 +216,8 @@ static inline bool circle_rect_collision(const ShapeTransfer& circle, const Shap
 
 
 static inline bool circle_collides( const ShapeTransfer&circle, const ShapeTransfer& shape, CMPUT350::Point2D& pnt,bool& intersection) {
+
+    // handles all cases for what shape the other shape is
 
 
         switch(shape.shape.t) {
@@ -288,8 +293,10 @@ bool collision(CMPUT350::CollisionObject& obj1, CMPUT350::CollisionObject& obj2,
                                                                                 // the point where an intersection with a line occurs
                                                                                 // the bool is to let us know if there was an intersection involving a line intersect or nto
                                                                                 // important for when a line is INSIDE a circle/rectangle.
+                                                                                // lineInvolved is passed through all functions in this file
 
-    if (!(BoundingBoxCollision(obj1, obj2))) return false;
+
+    if (!(BoundingBoxCollision(obj1, obj2))) return false; // check the bounding boxes first.
 
     lineInvolved = false;
     for ( auto& obj1_shape : obj1.GetShapes()) {

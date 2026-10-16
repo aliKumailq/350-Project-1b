@@ -12,7 +12,7 @@ namespace  {
         return (1-t) * GetBezierPoint<I - 1>(pts, starting_point_index, t) + t * GetBezierPoint<I - 1>(pts, starting_point_index + 1, t);
     }
 
-    template<>
+    template<> // base case for t at linear bezier curve
     inline CMPUT350::Point2D GetBezierPoint<1>(const std::vector<CMPUT350::Point2D> &pts, const size_t& starting_point_index,const float& t) {
         const CMPUT350::Point2D& A = pts[starting_point_index];
         const CMPUT350::Point2D& B = pts[starting_point_index + 1];
@@ -31,7 +31,7 @@ namespace  {
         return lhs + rhs; // for the love of god let the compiler just write these two out.
     }
 
-    template<>
+    template<> // Base Case for derivative of linear bezier curve
     inline CMPUT350::Point2D GetBezierPoint_d<1>(const std::vector<CMPUT350::Point2D> &pts, const size_t& starting_point_index,const float& t) {
         const CMPUT350::Point2D& A = pts[starting_point_index];
         const CMPUT350::Point2D& B = pts[starting_point_index + 1];
