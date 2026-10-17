@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "Helpers.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Angle.hpp>
 
@@ -110,7 +111,7 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
     
 
 
-    Point2D end(-(to.y - from.y), (to.x - from.x));
+    Helpers::Vector2D end(-(to.y - from.y), (to.x - from.x));
     end.Normalize();
     end =
         end *

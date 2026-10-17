@@ -5,6 +5,7 @@
 
 using namespace Helpers;
 
+
 static inline bool line_circle_collision(const ShapeTransfer& line_, const ShapeTransfer& circle_, CMPUT350::Point2D& pnt, bool& intersection) {
     auto line__ = line_;
     auto circle__ = circle_;
@@ -37,10 +38,10 @@ static inline bool line_circle_collision(const ShapeTransfer& line_, const Shape
     }
 
     
-    auto segment = line.p2 - line.p1;
+    Vector2D segment = line.p2 - line.p1;
     auto segment_len = line.p2.Distance(line.p1);
 
-    auto AP = line.p1 - circle.center;
+    Vector2D AP = line.p1 - circle.center;
     // A == line.p1
     // P == center of circle
 
