@@ -1,0 +1,18 @@
+
+Collisions:
+    - Collisions for rectangles heavily derive from the work done towards line collisions. Each edge is treated like a line and if no collisions with the edges are present we check if the shape is inside
+    - Rectangles also had to leverage Separating Axis Theorem to see if two (likely rotated) rectangles were colliding.
+    - Checking for collisions between a line and a circle is relatively straight forward, but for FINDING said intersection, using vectors with pythagorean theorem comes with multiple challenges, making it impractical.
+        - The slope/orientation of the line, alongside its length can create some weird edge cases if the line has a slope of 0 or infinity.
+        - Much more straightforward to solve for t, where t is used to index through P1 + (P2 - P1)t (i.e. the line segment).
+        - The function for carrying out collisions takes with it a reference to a point and a reference to a boolean. The boolean specifies whether or not there was a line intersection, and the point reference specifies where that intersection occurs in screen-coordinates.
+        - Reverse Transformations must be applied to this point after confirming a line-collision-intersection (with respect to both collision objecst being compared) before calling CollisionEnter.
+
+BezierCurve:
+    - BezierCurves are implemented with the idea that we know our desired dimensions at compile time.
+    - This allows for recursing template classes, where we recurse down to the base case, which is a template specialization for linear bezier curves.
+
+
+DrawContext:
+    - Simply applies transformations to each shape before drawing it.
+    

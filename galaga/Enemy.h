@@ -36,7 +36,7 @@ public:
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;
     const std::vector<CMPUT350::Shape>& GetShapes() override;
-    const CMPUT350::Rect& GetBounds() const override;
+    const CMPUT350::Rect& GetBounds() override;
 
     // Ask the enemy to break formation and dive at the player. True means the run started; false means it
     // is busy (still flying in, already diving, returning, or dead). Each type answers with its own curve.

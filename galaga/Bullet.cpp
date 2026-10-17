@@ -47,7 +47,7 @@ void Bullet::RenderForeground(CMPUT350::GameContext* context)
     {
         // Once it has struck, the bullet is only a small mark at the impact point. The point is in world
         // space, so subtract our own location to place it in the local frame the engine offsets for us.
-        context->ScreenContext->DrawCircle(mCollisionPoint - mLocation, 3.0f, colour);
+        context->ScreenContext->DrawCircle(mCollisionPoint, 8.0f, colour);
         return;
     }
 
@@ -95,12 +95,12 @@ const std::vector<CMPUT350::Shape>& Bullet::GetShapes()
     return mShapes;
 }
 
-const CMPUT350::Rect& Bullet::GetBounds() const
+const CMPUT350::Rect& Bullet::GetBounds() 
 {
     // Box around last frame's position and this one, so a fast bullet still hits what it passed through
-    mBounds = CMPUT350::Rect(mPreviousLocation, mLocation);
+    mBounds = CMPUT350::Rect(CMPUT350::Point2D(0,0));
     return mBounds;
-}
+}  
 
 CMPUT350::Point2D Bullet::GetLocation() const {
     return mLocation; // the nose, which is also the pivot: the bullet's shapes and drawing are relative to it

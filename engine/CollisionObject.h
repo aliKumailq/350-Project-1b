@@ -9,6 +9,7 @@
 
 namespace CMPUT350 {
 
+
 class CollisionObject : public GraphicsObject {
 public:
     virtual void CollisionEnter(const std::shared_ptr<CollisionObject> &obj) = 0;
@@ -23,8 +24,9 @@ public:
     virtual const std::vector<Shape> &GetShapes() = 0;
 
     // A cheap world-space box around the object, used to skip shape tests between objects that are far apart
-    virtual const Rect &GetBounds() const = 0;
+    virtual const Rect &GetBounds() = 0;
 };
+
 
 }  // namespace CMPUT350
 

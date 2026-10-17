@@ -342,7 +342,7 @@ void Galaga::DrawHud(CMPUT350::GameContext* context)
 
     // Score on the left, level in the middle, lives on the right, all along the top
     gui->DrawText("SCORE " + std::to_string(mScore), 24, CMPUT350::Point2D(20.0f, 20.0f), CMPUT350::Colors::white);
-    gui->DrawCenteredText("LEVEL " + std::to_string(mLevel), 24, CMPUT350::Point2D(w / 2.0f, 20.0f),
+    gui->DrawCenteredText("LEVEL " + std::to_string(mLevel), 24, CMPUT350::Point2D(w / 2.0f, 33.0f),
                           CMPUT350::Colors::white);
     gui->DrawText("LIVES " + std::to_string(mLives), 24, CMPUT350::Point2D(w - 170.0f, 20.0f),
                   CMPUT350::Colors::white);

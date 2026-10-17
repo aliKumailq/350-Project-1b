@@ -37,7 +37,7 @@ public:
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;
     const std::vector<CMPUT350::Shape>& GetShapes() override;
-    const CMPUT350::Rect& GetBounds() const override;
+    const CMPUT350::Rect& GetBounds()  override;
 
     // A destroyed player is put back into play by the Galaga class once the ships have gone home
     void Revive();
