@@ -36,7 +36,7 @@ public:
     // Collision Object Functions
     void CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj) override;
     const std::vector<CMPUT350::Shape>& GetShapes() override;
-    const CMPUT350::Rect& GetBounds() override;
+    virtual const CMPUT350::Rect& GetBounds() override;
 
     // Ask the enemy to break formation and dive at the player. True means the run started; false means it
     // is busy (still flying in, already diving, returning, or dead). Each type answers with its own curve.
@@ -65,6 +65,8 @@ protected:
     int mPoints;
     bool mAlive;
 
+    std::vector<CMPUT350::Shape> mShapes;      // local box, fixed, so it stays valid while moving
+    mutable CMPUT350::Rect mBounds;            // world box, rebuilt from mLocation when asked
 private:
     enum class Phase { kEntering, kFormation, kAttacking, kReturning };
 
@@ -85,8 +87,6 @@ private:
     bool mFiredThisDive;
     bool mNotified;                            // so the death message is sent exactly once
 
-    std::vector<CMPUT350::Shape> mShapes;      // local box, fixed, so it stays valid while moving
-    mutable CMPUT350::Rect mBounds;            // world box, rebuilt from mLocation when asked
 };
 
 #endif
