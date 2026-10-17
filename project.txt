@@ -99,7 +99,7 @@ DrawContext:
 
 Contributions:
  - Ali mainly did collisions, Bezier, and Drawing and Rendering
- - Ahmed mainly did the engine changes and the galaga
+ - Ahmed mainly did the engine changes and the galaga and keyboard mappings
 
 
 Extra Credit:
@@ -108,6 +108,16 @@ Extra Credit:
       behavior. Applied it to bullet headings, the tangents returned by Bezier::GetSlope and used
       by Enemy::PlaceOnCurve, perpendicular offsets in DrawContext, and direction vectors in
       MathUtil::ClosestPoint and MathUtil::Crosses.
+    - Keyboard setup screen: Reachable from the title with K. It lists the five actions (coin, start,
+      move left, move right, fire), one row each. The highlighted row is the one being changed: press a
+      key and it becomes that action's key, then the highlight moves to the next row. Escape leaves.
+
+      Catching any key at all takes a small workaround, because of how input normally arrives. A game
+      object has to ask the engine for the keys it wants, and when one of those is pressed the engine
+      reports which message fired, not which key it was. So the screen asks for every key up front and
+      gives each one its own message, named after the key, which means the message that arrives already
+      says what was pressed. Leaving puts the normal keys back. The rest of the game only ever knows the
+      message and never the key, so rebinding changes nothing anywhere else.
 
  AI Usage:
      - DeepSeek 4.1 Flash was used as an automated review runner, run locally for static analysis over the engine and

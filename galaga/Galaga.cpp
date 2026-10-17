@@ -2,15 +2,13 @@
 
 #include <algorithm>
 
+#include <SFML/Window/Keyboard.hpp>
+
 #include "Boss.h"
 #include "Goei.h"
 #include "Keyboard.h"
 #include "Stars.h"
 #include "Zako.h"
-
-// The messages Galaga installs and listens for on the title screen
-static const char* const kCoin = "GalagaCoin";
-static const char* const kStart = "GalagaStart";
 
 static constexpr int kStartLives = 3;
 static constexpr int kWavesPerLevel = 5;   // five waves of eight ships make a level
@@ -19,32 +17,75 @@ static constexpr int kStartupFrames = 90;  // how long the "level" card shows
 static constexpr int kGameOverFrames = 180; // how long the game-over card shows
 static constexpr int kSpawnInterval = 12;  // frames between the ships of a wave streaming in
 static constexpr int kAttackInterval = 30; // frames between the game sending a ship down
+static constexpr int kSetupKey = CMPUT350::Key::K;
 
 Galaga::Galaga(int windowWidth, int windowHeight)
     : mState(State::kWaiting), mFrameInState(0), mCoins(0), mScore(0), mLives(kStartLives), mLevel(1),
       mWaveIndex(0), mSpawnIndex(0), mStartRequested(false), mRespawnPending(false),
+      mKeySetupRequested(false), mKeySetupExitRequested(false), mRebindIndex(0), mPendingScancode(-1),
       mWindowWidth(windowWidth), mWindowHeight(windowHeight)
 {
 }
 
+void Galaga::InstallBindings(CMPUT350::GameContext* context)
+{
+    for (const Binding& b : mBindings)
+    {
+        context->mEngineView->InstallKeyDownNotification(b.scancode, b.downMsg);
+        if (b.upMsg != nullptr)
+            context->mEngineView->InstallKeyUpNotification(b.scancode, b.upMsg);
+    }
+
+    context->mEngineView->InstallKeyDownNotification(kSetupKey, kKeySetup);
+}
+
+void Galaga::BeginKeyCapture(CMPUT350::GameContext* context)
+{
+    for (const auto& entry : mCaptureNames)
+    {
+        context->mEngineView->InstallKeyDownNotification(entry.second, entry.first);
+    }
+}
+
+std::string Galaga::KeyText(int scancode) const
+{
+    return sf::Keyboard::getDescription(sf::Keyboard::Scancode(scancode)).toAnsiString();
+}
+
+std::string Galaga::KeyTextFor(const char* downMsg) const
+{
+    for (const Binding& b : mBindings)
+    {
+        if (std::string(b.downMsg) == downMsg) return KeyText(b.scancode);
+    }
+    return "?";
+}
+
 void Galaga::Initialize(CMPUT350::GameContext* context)
 {
-    // Galaga installs every key and says which message it sends. The player registers for the ones it
-    // cares about in its own Initialize, so the two halves stay agreed through the shared names.
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::Num5, kCoin);
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::Num1, kStart);
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::A, kPlayerMoveLeft);
-    context->mEngineView->InstallKeyUpNotification(CMPUT350::Key::A, kPlayerMoveLeftUp);
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::D, kPlayerMoveRight);
-    context->mEngineView->InstallKeyUpNotification(CMPUT350::Key::D, kPlayerMoveRightUp);
-    context->mEngineView->InstallKeyDownNotification(CMPUT350::Key::Space, kPlayerFire);
+    mBindings = {
+        {CMPUT350::Key::Num5, "INSERT COIN", kCoin, nullptr},
+        {CMPUT350::Key::Num1, "START", kStart, nullptr},
+        {CMPUT350::Key::A, "MOVE LEFT", kPlayerMoveLeft, kPlayerMoveLeftUp},
+        {CMPUT350::Key::D, "MOVE RIGHT", kPlayerMoveRight, kPlayerMoveRightUp},
+        {CMPUT350::Key::Space, "FIRE", kPlayerFire, nullptr},
+    };
+    InstallBindings(context);
 
     // Galaga hears the coin and start keys itself, plus the death messages that drive scoring and lives;
     // the player's own messages go to the player
     context->mNotificationManager->Register(context->CurrObject, kCoin);
     context->mNotificationManager->Register(context->CurrObject, kStart);
+    context->mNotificationManager->Register(context->CurrObject, kKeySetup);
     context->mNotificationManager->Register(context->CurrObject, kEnemyDestroyed);
     context->mNotificationManager->Register(context->CurrObject, kPlayerDestroyed);
+
+    for (int n = 0; n < int(CMPUT350::Key::ScanCount); n++)
+    {
+        const std::string name = "GalagaKey_" + std::to_string(n);
+        mCaptureNames[name] = n;
+        context->mNotificationManager->Register(context->CurrObject, name);
+    }
 
     // The starfield is the backdrop for the whole session
     context->mEngineView->AddGameObject(
@@ -60,12 +101,49 @@ void Galaga::Update(CMPUT350::GameContext* context)
     switch (mState)
     {
     case State::kWaiting:
-        // The coin and start keys only matter here; they arrive through ReceiveNotification
-        if (mStartRequested)
+        if (mKeySetupRequested)
+        {
+            mKeySetupRequested = false;
+            mRebindIndex = 0;
+            BeginKeyCapture(context);
+            EnterState(State::kKeySetup);
+        }
+        else if (mStartRequested)
         {
             mStartRequested = false;
             mCoins--;
             StartNewGame(context);
+        }
+        break;
+
+    case State::kKeySetup:
+        if (mKeySetupExitRequested)
+        {
+            mKeySetupExitRequested = false;
+            InstallBindings(context);
+            mPendingScancode = -1;
+            EnterState(State::kWaiting);
+        }
+        else if (mPendingScancode >= 0)
+        {
+            bool taken = false;
+            for (size_t i = 0; i < mBindings.size(); i++)
+            {
+                if (int(i) != mRebindIndex && mBindings[i].scancode == mPendingScancode) taken = true;
+            }
+
+            if (!taken)
+            {
+                mBindings[mRebindIndex].scancode = mPendingScancode;
+                mRebindIndex++;
+            }
+            mPendingScancode = -1;
+
+            if (mRebindIndex >= int(mBindings.size()))
+            {
+                InstallBindings(context);
+                EnterState(State::kWaiting);
+            }
         }
         break;
 
@@ -93,6 +171,19 @@ void Galaga::LateUpdate(CMPUT350::GameContext* context)
 
 void Galaga::ReceiveNotification(const std::string& key)
 {
+    if (key == kKeySetup) { if (mState == State::kWaiting) mKeySetupRequested = true; return; }
+
+    if (mState == State::kKeySetup)
+    {
+        auto found = mCaptureNames.find(key);
+        if (found != mCaptureNames.end())
+        {
+            if (found->second == int(CMPUT350::Key::Escape)) mKeySetupExitRequested = true;
+            else mPendingScancode = found->second;
+            return;
+        }
+    }
+
     // The coin and start keys only mean anything on the title screen
     if (key == kCoin || key == kStart)
     {
@@ -349,12 +440,29 @@ void Galaga::DrawHud(CMPUT350::GameContext* context)
 
     if (mState == State::kWaiting)
     {
-        gui->DrawCenteredText("INSERT COIN - PRESS 5", 30, CMPUT350::Point2D(w / 2.0f, h / 2.0f - 40.0f),
-                              CMPUT350::Colors::yellow);
-        gui->DrawCenteredText("PRESS 1 TO START", 30, CMPUT350::Point2D(w / 2.0f, h / 2.0f + 20.0f),
-                              CMPUT350::Colors::yellow);
+        gui->DrawCenteredText("INSERT COIN - PRESS " + KeyTextFor(kCoin), 30,
+                              CMPUT350::Point2D(w / 2.0f, h / 2.0f - 40.0f), CMPUT350::Colors::yellow);
+        gui->DrawCenteredText("PRESS " + KeyTextFor(kStart) + " TO START", 30,
+                              CMPUT350::Point2D(w / 2.0f, h / 2.0f + 20.0f), CMPUT350::Colors::yellow);
         gui->DrawCenteredText("COINS  " + std::to_string(mCoins), 24, CMPUT350::Point2D(w / 2.0f, h / 2.0f + 80.0f),
                               CMPUT350::Colors::grey);
+        gui->DrawCenteredText("PRESS " + KeyText(kSetupKey) + " FOR KEY SETUP", 22,
+                              CMPUT350::Point2D(w / 2.0f, h / 2.0f + 150.0f), CMPUT350::Colors::grey);
+    }
+    else if (mState == State::kKeySetup)
+    {
+        gui->DrawCenteredText("KEY SETUP", 40, CMPUT350::Point2D(w / 2.0f, 130.0f), CMPUT350::Colors::cyan);
+
+        for (size_t i = 0; i < mBindings.size(); i++)
+        {
+            const CMPUT350::RGBColor colour =
+                (int(i) == mRebindIndex) ? CMPUT350::Colors::yellow : CMPUT350::Colors::white;
+            const std::string row = std::string(mBindings[i].label) + "   " + KeyText(mBindings[i].scancode);
+            gui->DrawCenteredText(row, 28, CMPUT350::Point2D(w / 2.0f, 240.0f + float(i) * 50.0f), colour);
+        }
+
+        gui->DrawCenteredText("PRESS A KEY TO REBIND - ESC WHEN DONE", 18,
+                              CMPUT350::Point2D(w / 2.0f, h - 120.0f), CMPUT350::Colors::grey);
     }
     else if (mState == State::kStartup)
     {
