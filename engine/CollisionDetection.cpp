@@ -116,10 +116,23 @@ static inline bool line_rect_collision(const ShapeTransfer& line_, const ShapeTr
     Helpers::TransformVerticies(verticies, Rect.transformation.offset, Rect.transformation.rotation);
 
     auto edges = Helpers::GetRectEdges(verticies);
-    if (line.Crosses(edges.top,pnt)) return true;
-    if (line.Crosses(edges.bottom, pnt)) return true;
-    if (line.Crosses(edges.left, pnt)) return true;
-    if (line.Crosses(edges.right, pnt)) return true;
+    // The line is directed from p1 to p2, so the spec wants the first point it meets. The edges come
+    // in no real order, so check all four and keep the crossing closest to p1.
+    const Line* candidate_edges[4] = { &edges.top, &edges.bottom, &edges.left, &edges.right };
+    bool crossed = false;
+    CMPUT350::Point2D nearest;
+    for (const Line* edge : candidate_edges) {
+        CMPUT350::Point2D p;
+        if (!line.Crosses(*edge, p)) continue;
+        if (!crossed || p.DistanceSquared(line.p1) < nearest.DistanceSquared(line.p1)) {
+            nearest = p;
+            crossed = true;
+        }
+    }
+    if (crossed) {
+        pnt = nearest;
+        return true;
+    }
 
     auto old_line = line_.shape.shape.line;
     auto lp1 = Helpers::TransformPoint(old_line.p1, line_.transformation.offset, line_.transformation.rotation);

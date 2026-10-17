@@ -149,7 +149,7 @@ inline namespace Helpers {
         Transformation(const Point2D& pnt, const float& r) : offset(pnt), rotation(r), cos(cosf(rotation)), sin(sinf(rotation)) {}
 
         inline Point2D transform(const Point2D& p_, bool reverse = false) const  {
-            return Helpers::TransformPoint(p_, offset, cos, sin, false);
+            return Helpers::TransformPoint(p_, offset, cos, sin, reverse);
         }
 
         CMPUT350::Point2D offset;

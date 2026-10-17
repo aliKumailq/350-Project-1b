@@ -95,12 +95,14 @@ const std::vector<CMPUT350::Shape>& Bullet::GetShapes()
     return mShapes;
 }
 
-const CMPUT350::Rect& Bullet::GetBounds() 
+const CMPUT350::Rect& Bullet::GetBounds()
 {
-    // Box around last frame's position and this one, so a fast bullet still hits what it passed through
-    mBounds = CMPUT350::Rect(CMPUT350::Point2D(0,0));
+    // Bounds are in local space now, so the box has to cover the bullet's own shape, not sit on its
+    // nose. The swept path runs from where it was (relative to the nose) back to the origin, and
+    // Rect(p1, p2) builds the positive-size box around both points.
+    mBounds = CMPUT350::Rect(mPreviousLocation - mLocation, CMPUT350::Point2D(0.0f, 0.0f));
     return mBounds;
-}  
+}
 
 CMPUT350::Point2D Bullet::GetLocation() const {
     return mLocation; // the nose, which is also the pivot: the bullet's shapes and drawing are relative to it
