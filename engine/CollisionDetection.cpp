@@ -267,6 +267,7 @@ static inline bool circle_collides( const ShapeTransfer&circle, const ShapeTrans
 }
 
 
+// A rectangle against any other shape, dispatching to the matching test
 static inline bool rect_collides(const ShapeTransfer&rect, const ShapeTransfer& shape , CMPUT350::Point2D& pnt,bool& intersection) {
     
 

@@ -21,6 +21,7 @@ namespace  {
     }
 
 
+    // The derivative, by the product rule, recursing the same way as GetBezierPoint
     template<int I>
     inline CMPUT350::Point2D GetBezierPoint_d(const std::vector<CMPUT350::Point2D> &pts, const size_t& starting_point_index,const float& t) {
         static_assert(I > 0);
@@ -45,10 +46,12 @@ namespace  {
 }
 
 
+// Store the control points; they have to cover at least one curve
 Bezier::Bezier(const std::vector<CMPUT350::Point2D> &pts) : m_pts(pts) {
     assert(pts.size() > BEZIER_DIMENSION);
 }
 
+// The spline evaluated at t, by picking the curve t falls on and its position within that curve
 CMPUT350::Point2D Bezier::GetPoint(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
     assert(pts.size() > BEZIER_DIMENSION); 
     const int max_t = int((pts.size() - 1) / BEZIER_DIMENSION);
@@ -69,6 +72,7 @@ CMPUT350::Point2D Bezier::GetPoint(const std::vector<CMPUT350::Point2D> &pts, co
 
 }
 
+// The tangent at t, walking the chain the same way GetPoint does
 CMPUT350::Point2D Bezier::GetSlope(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
     assert(pts.size() > BEZIER_DIMENSION); 
     const int max_t = int((pts.size() - 1) / BEZIER_DIMENSION);
@@ -90,10 +94,12 @@ CMPUT350::Point2D Bezier::GetSlope(const std::vector<CMPUT350::Point2D> &pts, co
 }
 
 
+// The stored points, so a caller does not have to pass the list again
 CMPUT350::Point2D Bezier::GetPoint(const float& t) const {
     return Bezier::GetPoint(m_pts, t);
 }
 
+// The stored points, same as above
 CMPUT350::Point2D Bezier::GetSlope(const float & t) const {
     return Bezier::GetSlope(m_pts, t);
 }

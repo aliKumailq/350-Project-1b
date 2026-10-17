@@ -12,6 +12,7 @@ namespace CMPUT350 {
 
 class CollisionObject : public GraphicsObject {
 public:
+    // Told when this object has run into another; the object handed over is the one it hit
     virtual void CollisionEnter(const std::shared_ptr<CollisionObject> &obj) = 0;
 
     // The engine calls this form, which also carries where the two objects met. An object that does not
@@ -23,7 +24,7 @@ public:
     // place them in the world, so these do not have to match what the object draws.
     virtual const std::vector<Shape> &GetShapes() = 0;
 
-    // A cheap world-space box around the object, used to skip shape tests between objects that are far apart
+    // A cheap local-space box around the object, used to skip shape tests between objects that are far apart
     virtual const Rect &GetBounds() = 0;
 };
 

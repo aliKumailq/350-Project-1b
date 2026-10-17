@@ -48,6 +48,8 @@ bool RectangleCollision(const CMPUT350::Rect& obj1, const CMPUT350::Rect& obj2, 
 }
 
 
+// The broad phase: a quick test on the two objects' bounding boxes, so the shape tests are skipped
+// for pairs that are nowhere near each other
 bool BoundingBoxCollision(CMPUT350::CollisionObject &obj1, CMPUT350::CollisionObject &obj2) {
     return RectangleCollision(obj1.GetBounds(), obj2.GetBounds(), obj1.GetRotation(), obj2.GetRotation(), obj1.GetLocation(), obj2.GetLocation());
 }
