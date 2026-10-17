@@ -58,13 +58,20 @@ void Bullet::RenderForeground(CMPUT350::GameContext* context)
 
 void Bullet::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj)
 {
-    // Only an enemy stops a bullet. The player that fired it isn't one, so the spawn overlap is ignored.
+    // A shot never hits the object that fired it. It spawns touching the muzzle, so the pair is always in
+    // contact, and a bullet that took that as a hit would cancel the instant it appeared.
+    if (std::static_pointer_cast<CMPUT350::GameObject>(obj) == mParent.lock()) return;
+
+    // Otherwise only an enemy stops a bullet; the player and other shots are passed through.
     if (std::dynamic_pointer_cast<Enemy>(obj) != nullptr) mAlive = false;
 }
 
 void Bullet::CollisionEnter(const std::shared_ptr<CMPUT350::CollisionObject>& obj,
                             const CMPUT350::Point2D& collisionPoint)
 {
+    // The muzzle contact with our own parent is not a hit, so it must not set the impact mark.
+    if (std::static_pointer_cast<CMPUT350::GameObject>(obj) == mParent.lock()) return;
+
     // The engine tells us where we struck. If several enemies are hit on the same frame, keep the point
     // furthest down the screen (largest y), which is where the bullet would have got to last.
     if (!mHit || collisionPoint.y > mCollisionPoint.y)
