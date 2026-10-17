@@ -14,14 +14,20 @@ class GameObject;
 // registers for a named message, and anyone can shout that message into the manager
 class NotificationManager {
 public:
+    // A listener asks to hear this message. The pointer is weak, so registering never keeps it alive
     void Register(std::weak_ptr<GameObject> object, const std::string& key);
+    // Stop delivering this message to this object
     void Unregister(std::weak_ptr<GameObject> object, const std::string& key);
+    // Shout a message: every live listener for it hears it right away, and the dead ones are swept out
     void Notify(const std::string& message);
 
     // Recording keeps a log of every message that reaches a listener, so a run can be captured and
     // played back later instead of being re-driven by hand
+    // Begin logging delivered messages, from empty
     void StartRecording();
+    // Stop logging, but keep what was logged
     void StopRecording();
+    // Send the logged messages again, in the order they were delivered
     void Replay();
 
 private:

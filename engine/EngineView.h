@@ -14,6 +14,7 @@ class EngineView {
     using tGameObject = std::vector<std::shared_ptr<GameObject>>;
 
 public:
+    // Hand the engine an object to own and run; it starts being updated on the next frame
     virtual void AddGameObject(std::shared_ptr<GameObject> gameObject) = 0;
 
     // Register a message to fire when the given key scancode is pressed down or released

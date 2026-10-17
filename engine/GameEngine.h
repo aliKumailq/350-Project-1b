@@ -21,7 +21,9 @@ class GameContext;
 
 class GameEngine : public EngineView {
 public:
+    // Opens a window of the given size and loads the built-in font
     GameEngine(unsigned int width, unsigned int height, const std::string& name);
+    // Closes the window if Run() left it open
     ~GameEngine();
 
     GameEngine(const GameEngine&) = delete;             // Prevent copy-construction
@@ -29,6 +31,8 @@ public:
     GameEngine& operator=(const GameEngine&) = delete;  // Prevent assignment
     GameEngine& operator=(GameEngine&&) = delete;       // Prevent move-assignment
 
+    // Queue an object for the engine to own. It is queued rather than added at once, so it is safe
+    // to spawn mid-frame; it gets initialized at the top of the next frame.
     void AddGameObject(std::shared_ptr<GameObject> gameObject) override;
 
     // Keys the game cares about; the engine fires these strings when the key goes down or comes up
@@ -57,7 +61,9 @@ private:
 
         bool mCloseGame;
 
+        // Drain the window's events and turn key presses and releases into their notifications
         inline void PollWindow();
+        // Check every pair of colliders once and tell both sides when they touch
         inline void ProcessCollisions();
 };
 

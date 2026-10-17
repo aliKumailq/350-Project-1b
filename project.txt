@@ -1,3 +1,83 @@
+Project Map
+
+The Game
+    - One Galaga clone. Player slides along the bottom and shoots up. Five waves of eight
+      ships fly in on bezier curves and settle into a formation, then ships dive at the
+      player one at a time. Three ship types differ in health and points. Three lives,
+      five waves a level.
+
+
+Entrypoint is galaga/main.cpp with the entire game loop being 
+
+``
+
+CMPUT350::GameEngine engine(768, 1024, "Galaga");   // makes the window + font
+auto game = std::make_shared<Galaga>(768, 1024);    // the game object
+engine.AddGameObject(game);                         // hand it to the engine
+engine.Run();                                       // enter the loop
+
+``
+where main creates one singular galaga object instead of knowing about the players, enemies, bullets, etc up front.
+
+So what is GameEngine? It is 3 things
+
+- A window owner which holds sf::RenderWindow and the font
+- An object registry which owns every GameObject that it has been given in a std::vector<std::shared_ptr<GameObject>>, plus a pending vector for ones added mid-frame
+- The EngineView which is the interface objects use to reach back in. GameEngine implements EngineView so when an object wants to spawn something with AddGameObject or register a key with InstallKeyDownNotification, it goes through the object that owns it. The engine is the view so there is no separate adapter.
+
+It also owns the NotificationManager and the lookup tables for key events.
+
+The frame loop itself is GameEngine::Run() in GameEngine.cpp where every frame does:
+
+    a - Clear dead objects 
+    b - Admit and initialize new objects
+    c - poll for input
+    d - update
+    e - Collisions 
+    f - LateUpdate
+    g - Render Background
+    h - Render Foreground
+    i - Display + advance the clock
+
+State Flow:
+    - Waiting -> Startup -> Waves -> Gameplay -> GameOver, all run off mFrameInState.
+    - Waiting: title screen. 5 inserts a coin, 1 starts if Coins > 0.
+    - Startup: reset score/lives/level, spawn the player, show "LEVEL n" for 90 frames.
+    - Waves: release the wave's 8 ships 12 frames apart, each on its own bezier into its
+      slot. Move on once they are all settled.
+    - Gameplay: every 30 frames send one settled ship down to attack. Empty wave -> next
+      wave; after 5 waves level++ and back to Startup. Dead player -> wait for the field
+      to clear, then respawn or end.
+    - GameOver: show the card 180 frames, clear the field, back to Waiting.
+    - Dead enemies and the dead player arrive as notifications (EnemyDestroyed,
+      PlayerDestroyed), not as pointers.
+
+API changes from 1a:
+    - Shapes and bounds are local space now. GetShapes/GetBounds return local shapes, the
+      engine applies GetLocation/GetRotation. 1a's GetBounds was world space.
+    - Input is messages. HandleKeyEvent is gone. The engine maps scancode -> message name,
+      objects register for names. Many keys can share one message.
+    - Collision is box-check then per-shape, handing back a point and whether a line was
+      involved. The engine reverse-transforms that point into each object's local frame
+      before CollisionEnter.
+    - Two draw contexts. ScreenContext carries the object's transform, GUIContext never
+      does, so HUD draws in screen space.
+    - The engine owns everything with shared_ptr; every back-reference is a weak_ptr.
+
+Notifications:
+    - Register by name. Notify delivers to every live listener immediately and sweeps out
+      the dead ones, so it never keeps an object alive. Galaga listens for game events
+      instead of holding pointers to things.
+
+Player / Enemy / Bullet:
+    - Player: registers for the move/fire messages (Galaga installs the keys), moves once
+      per frame while a key is held, clamps to the screen, 2 shots max through expired
+      weak_ptr slots, respawned by Galaga.
+    - Enemy: base class. Flies its bezier in, hovers in formation, dives and returns on an
+      attack curve, notifies on death. Each type only writes Attack and its drawing.
+      Three types, 1 / 2 / 3 health.
+    - Bullet: one swept line from last frame's position to this one so it cannot tunnel.
+      Dies with its parent, ignores its own parent, one dot at the impact point.
 
 Collisions:
     - Collisions for rectangles heavily derive from the work done towards line collisions. Each edge is treated like a line and if no collisions with the edges are present we check if the shape is inside
@@ -6,7 +86,7 @@ Collisions:
         - The slope/orientation of the line, alongside its length can create some weird edge cases if the line has a slope of 0 or infinity.
         - Much more straightforward to solve for t, where t is used to index through P1 + (P2 - P1)t (i.e. the line segment).
         - The function for carrying out collisions takes with it a reference to a point and a reference to a boolean. The boolean specifies whether or not there was a line intersection, and the point reference specifies where that intersection occurs in screen-coordinates.
-        - Reverse Transformations must be applied to this point after confirming a line-collision-intersection (with respect to both collision objecst being compared) before calling CollisionEnter.
+        - Reverse Transformations must be applied to this point after confirming a line-collision-intersection (with respect to both collision objects being compared) before calling CollisionEnter.
 
 BezierCurve:
     - BezierCurves are implemented with the idea that we know our desired dimensions at compile time.
@@ -15,4 +95,17 @@ BezierCurve:
 
 DrawContext:
     - Simply applies transformations to each shape before drawing it.
-    
+
+
+Contributions:
+ - Ali mainly did collisions, Bezier, and Drawing and Rendering
+ - Ahmed mainly did the engine changes and the galaga
+
+ AI Usage:
+     - DeepSeek 4.1 Flash was used as an automated review runner, run locally for static analysis over the engine and
+      the collision code, and for a final pass to clean up any uneven or missing engine level documentation.
+    - Example: the review caught that Bullet::GetBounds returned a zero-size rect, so the
+      broad-phase box never covered a bullet's swept path. Fix was to bound the swept
+      segment instead.
+      Prompt: "find any remaining documentation gaps that block the criteria for 'all functions in the game engine need to be documented'"
+    - Reflection: The model was helpful at spotting wrong assumptions and edge cases just by reading the code, especially ones we had not caught in testing. It was also convenient for the final documentation pass. We still needed to check the findings ourselves and understand the resulting implementation.
