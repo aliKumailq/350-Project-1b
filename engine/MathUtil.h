@@ -78,6 +78,9 @@ struct Point2D {
     }
 };
 
+// The same type, named for when the value is a direction or offset instead of a position
+using Vector2D = Point2D;
+
 static std::ostream& operator<<(std::ostream& os, const Point2D& p) {
     os << "(" << p.x << ", " << p.y << ")";  // Return os by reference not void so we can chain our
                                              // outputs since void breaks << chaining
@@ -97,8 +100,8 @@ struct Line {
     Point2D ClosestPoint(const Point2D& p) const {
         // Finds the closest point on a given segment, not the infinite line
 
-        Point2D direction = p2 - p1;
-        Point2D toPoint = p - p1;
+        Vector2D direction = p2 - p1;
+        Vector2D toPoint = p - p1;
         float lengthSquared = direction.Dot(direction);
         if (lengthSquared == 0.0f) {  // guard against divide by 0
             return p1;
@@ -120,8 +123,8 @@ struct Line {
     bool Crosses(Line other, Point2D& crossingPoint) const {
         // Turn each segment into a direction vector; If we start at p1, which way and how far do we
         // travel to reach p2?
-        Point2D r = p2 - p1;
-        Point2D s = other.p2 - other.p1;
+        Vector2D r = p2 - p1;
+        Vector2D s = other.p2 - other.p1;
 
         // Cross the two directions. If this is 0, the directions are parallel, so there is no
         // intersection point for us to solve for.
@@ -133,7 +136,7 @@ struct Line {
 
         // Arrow from MY starting point to THEIR starting point. This tells us how separated the two
         // journeys are at the beginning.
-        Point2D offset = other.p1 - p1;
+        Vector2D offset = other.p1 - p1;
 
         // For this part, just to explain the algorithm, we basically have p1 + t*r = other.p1 +
         // u*s, which finds where in the journey we will both cross given our starting points and a

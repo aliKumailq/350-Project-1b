@@ -101,6 +101,14 @@ Contributions:
  - Ali mainly did collisions, Bezier, and Drawing and Rendering
  - Ahmed mainly did the engine changes and the galaga
 
+
+Extra Credit:
+    - Vector2D: Defined Vector2D as an alias for Point2D using the using keyword, allowing
+      directions and offsets to be named separately from positions without changing their
+      behavior. Applied it to bullet headings, the tangents returned by Bezier::GetSlope and used
+      by Enemy::PlaceOnCurve, perpendicular offsets in DrawContext, and direction vectors in
+      MathUtil::ClosestPoint and MathUtil::Crosses.
+
  AI Usage:
      - DeepSeek 4.1 Flash was used as an automated review runner, run locally for static analysis over the engine and
       the collision code, and for a final pass to clean up any uneven or missing engine level documentation.

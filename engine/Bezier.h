@@ -16,11 +16,11 @@ public:
 	// Where the spline is at t
 	CMPUT350::Point2D GetPoint(const float& t) const;
 	// The tangent (derivative) at t, which is the objects heading as it travels the curve
-	CMPUT350::Point2D GetSlope(const float& t) const;
+	CMPUT350::Vector2D GetSlope(const float& t) const;
 
 	// The same two, as statics, so they can be used without building a spline first
 	static CMPUT350::Point2D GetPoint(const std::vector<CMPUT350::Point2D> &pts, const float& t);
-	static CMPUT350::Point2D GetSlope(const std::vector<CMPUT350::Point2D> &pts, const float& t);
+	static CMPUT350::Vector2D GetSlope(const std::vector<CMPUT350::Point2D> &pts, const float& t);
 
 	private:
 	const std::vector<CMPUT350::Point2D> m_pts;

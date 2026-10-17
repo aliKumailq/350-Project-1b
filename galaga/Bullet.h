@@ -9,7 +9,7 @@ class Bullet : public CMPUT350::CollisionObject
 {
 public:
     // parent is whoever fired the bullet; the bullet watches it weakly so it can die with its owner
-    Bullet(CMPUT350::Point2D location, CMPUT350::Point2D heading, bool player,
+    Bullet(CMPUT350::Point2D location, CMPUT350::Vector2D heading, bool player,
            std::weak_ptr<CMPUT350::GameObject> parent);
     bool IsPlayerBullet();
 
@@ -36,7 +36,8 @@ public:
 
 private:
     // mPreviousLocation is kept so the bounds can cover the whole step, not just where the bullet ended up
-    CMPUT350::Point2D mLocation, mPreviousLocation, mHeading;
+    CMPUT350::Point2D mLocation, mPreviousLocation;
+    CMPUT350::Vector2D mHeading; // the direction and distance the bullet moves each frame
     bool mPlayer, mAlive;
     std::weak_ptr<CMPUT350::GameObject> mParent; // whoever fired it; an expired parent takes the bullet with it
     CMPUT350::Point2D mCollisionPoint;           // where the bullet struck, for the death-mark it leaves

@@ -190,7 +190,7 @@ void Enemy::PlaceOnCurve(float t)
 
     // Face the way the curve is heading. The slope points along the travel, and the quarter turn makes
     // "straight up" read as zero, which is how the ship is drawn. On the way back the ship faces the other way.
-    CMPUT350::Point2D slope = Bezier::GetSlope(mPath, t);
+    CMPUT350::Vector2D slope = Bezier::GetSlope(mPath, t);
     if (mPhase == Phase::kReturning) slope = slope * -1.0f;
     mRotation = atan2f(slope.y, slope.x) + 1.5707963f;
 }
@@ -208,6 +208,6 @@ void Enemy::Fire(CMPUT350::GameContext* context)
     // A straight drop from the ship's belly, the way a diving ship shoots as it comes down. The enemy is
     // named as the parent, so the shot disappears with the ship that fired it.
     auto shot = std::make_shared<Bullet>(mLocation + CMPUT350::Point2D(0.0f, kHalfSize),
-                                         CMPUT350::Point2D(0.0f, kEnemyBulletSpeed), false, context->CurrObject);
+                                         CMPUT350::Vector2D(0.0f, kEnemyBulletSpeed), false, context->CurrObject);
     context->mEngineView->AddGameObject(shot);
 }

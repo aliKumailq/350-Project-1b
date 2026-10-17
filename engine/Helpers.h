@@ -95,7 +95,6 @@ inline namespace Helpers {
     }
 
     using axis_range = std::pair<double, double>;
-    using Vector2D = Point2D;
 
      // How far a shape reaches along one axis: the min and max of its corners' projections on it
      inline axis_range ProjectionRange(const std::vector<Point2D>& verts, const Vector2D& axis) {

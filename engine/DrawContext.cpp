@@ -2,7 +2,6 @@
 
 #include <cmath>
 
-#include "Helpers.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Angle.hpp>
 
@@ -115,7 +114,7 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
     
 
 
-    Helpers::Vector2D end(-(to.y - from.y), (to.x - from.x));
+    Vector2D end(-(to.y - from.y), (to.x - from.x));
     end.Normalize();
     end =
         end *
@@ -124,7 +123,7 @@ void DrawContext::DrawLine(Point2D from, Point2D to, float width, RGBColor c) {
 
     sf::ConvexShape line;
 
-    auto relative = to - from;  // vector from 'from' to 'ti'
+    Vector2D relative = to - from;  // vector from 'from' to 'ti'
 
     line.setPointCount(4);
 

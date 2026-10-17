@@ -73,7 +73,7 @@ CMPUT350::Point2D Bezier::GetPoint(const std::vector<CMPUT350::Point2D> &pts, co
 }
 
 // The tangent at t, walking the chain the same way GetPoint does
-CMPUT350::Point2D Bezier::GetSlope(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
+CMPUT350::Vector2D Bezier::GetSlope(const std::vector<CMPUT350::Point2D> &pts, const float& t) {
     assert(pts.size() > BEZIER_DIMENSION); 
     const int max_t = int((pts.size() - 1) / BEZIER_DIMENSION);
     assert(t >= 0 && t <= max_t);
@@ -100,6 +100,6 @@ CMPUT350::Point2D Bezier::GetPoint(const float& t) const {
 }
 
 // The stored points, same as above
-CMPUT350::Point2D Bezier::GetSlope(const float & t) const {
+CMPUT350::Vector2D Bezier::GetSlope(const float & t) const {
     return Bezier::GetSlope(m_pts, t);
 }

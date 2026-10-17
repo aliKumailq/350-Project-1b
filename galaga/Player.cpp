@@ -90,7 +90,7 @@ void Player::Fire(CMPUT350::GameContext* context)
     // The nose sits on the player's top edge, so the two boxes touch without ever overlapping on the spawn frame.
     // The bullet is told the player is its parent, so it dies if the player ever does.
     auto fired = std::make_shared<Bullet>(mLocation - CMPUT350::Point2D(0.0f, kHalfSize),
-                                          CMPUT350::Point2D(0.0f, -kBulletSpeed), true, context->CurrObject);
+                                          CMPUT350::Vector2D(0.0f, -kBulletSpeed), true, context->CurrObject);
 
     // The engine owns the bullet from here on, so the player only watches it through the weak_ptr
     *slot = fired;
